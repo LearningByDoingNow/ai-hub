@@ -17,6 +17,7 @@ export default function PipelineControl() {
   const { locale } = useLocale();
   const [runs, setRuns] = useState<PipelineRun[]>([]);
   const [stats, setStats] = useState({ news: 0, papers: 0, sources: 0 });
+  const [recentNews, setRecentNews] = useState<{ id: string; title: string; source: string; date: string }[]>([]);
   const [fetching, setFetching] = useState<string | null>(null);
   const [fetchOutput, setFetchOutput] = useState<string | null>(null);
 
@@ -26,6 +27,7 @@ export default function PipelineControl() {
       const data = await res.json();
       setRuns(data.runs || []);
       setStats(data.stats || { news: 0, papers: 0, sources: 0 });
+      setRecentNews(data.recentNews || []);
     } catch { /* ignore */ }
   }, []);
 
@@ -142,6 +144,27 @@ export default function PipelineControl() {
           </div>
         )}
       </div>
+      {/* Recently Added */}
+      {recentNews.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800/50">
+          <h3 className="font-medium text-slate-900 dark:text-slate-100 mb-4">
+            {locale === "zh" ? "最近抓取" : "Recently Fetched"}
+          </h3>
+          <div className="space-y-1.5">
+            {recentNews.map((item) => (
+              <div key={item.id} className="flex items-center justify-between py-1.5 text-sm">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className="shrink-0 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
+                    {item.source}
+                  </span>
+                  <span className="truncate text-slate-700 dark:text-slate-300">{item.title}</span>
+                </div>
+                <span className="shrink-0 ml-2 text-xs text-slate-400">{item.date}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

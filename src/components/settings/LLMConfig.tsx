@@ -31,6 +31,7 @@ export default function LLMConfig() {
   const [temperature, setTemperature] = useState("0.5");
   const [reasoningEffort, setReasoningEffort] = useState("default");
   const [saving, setSaving] = useState(false);
+  const [savedConfig, setSavedConfig] = useState({ baseUrl: "", model: "" });
 
   // Custom presets
   const [customPresets, setCustomPresets] = useState<Preset[]>([]);
@@ -73,6 +74,7 @@ export default function LLMConfig() {
     if (data.temperature) setTemperature(data.temperature);
     if (data.reasoningEffort) setReasoningEffort(data.reasoningEffort);
     setConfigured(!!data.apiKey);
+    setSavedConfig({ baseUrl: data.baseUrl || "", model: data.model || "" });
   }, []);
 
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
@@ -97,6 +99,7 @@ export default function LLMConfig() {
     setSaved(true);
     setConfigured(true);
     setApiKey("");
+    setSavedConfig({ baseUrl, model });
     setTimeout(() => setSaved(false), 2000);
   }
 
@@ -119,28 +122,29 @@ export default function LLMConfig() {
     setTesting(false);
   }
 
-  const currentProvider = allPresets.find((p) => p.baseUrl === baseUrl);
+  const savedProvider = allPresets.find((p) => p.baseUrl === savedConfig.baseUrl);
 
   return (
     <div className="space-y-6">
-      {/* Current Status */}
+      {/* Current Status — shows actually saved config, not form editing state */}
       <div className={`rounded-xl border p-4 ${
         configured
           ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20"
           : "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20"
       }`}>
         <div className="flex items-center gap-3">
-          <span className={`flex h-3 w-3 rounded-full ${configured ? "bg-green-500" : "bg-amber-500"}`}>
-            {configured && <span className="h-3 w-3 rounded-full bg-green-500 animate-ping absolute" />}
+          <span className={`relative flex h-3 w-3 ${configured ? "" : ""}`}>
+            <span className={`h-3 w-3 rounded-full ${configured ? "bg-green-500" : "bg-amber-500"}`} />
+            {configured && <span className="absolute h-3 w-3 rounded-full bg-green-500 animate-ping" />}
           </span>
           <div>
             <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
               {configured
-                ? `${locale === "zh" ? "当前模型" : "Active"}: ${currentProvider?.name || baseUrl.replace(/https?:\/\//, "").split("/")[0]} — ${model}`
+                ? `${locale === "zh" ? "当前模型" : "Active"}: ${savedProvider?.name || savedConfig.baseUrl.replace(/https?:\/\//, "").split("/")[0]} — ${savedConfig.model}`
                 : (locale === "zh" ? "未配置 LLM — 请在下方设置" : "LLM not configured — set up below")}
             </p>
             {configured && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{baseUrl}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{savedConfig.baseUrl}</p>
             )}
           </div>
         </div>

@@ -18,6 +18,12 @@ export async function GET() {
     )
     .all();
 
+  const recentNews = sdb
+    .prepare(
+      "SELECT id, title, source, date FROM news ORDER BY created_at DESC LIMIT 15"
+    )
+    .all();
+
   const newsCount = sdb
     .prepare("SELECT COUNT(*) as c FROM news")
     .get() as { c: number };
@@ -32,6 +38,7 @@ export async function GET() {
 
   return NextResponse.json({
     runs,
+    recentNews,
     stats: {
       news: newsCount.c,
       papers: papersCount.c,
