@@ -1,6 +1,13 @@
 import type { Provider, NewsItem, Paper } from "@/types";
 
+import { existsSync } from "fs";
+import path from "path";
+
+// Local dev: always use SQLite if db file exists (engine writes to SQLite)
+// Cloud deploy (Vercel etc): use Supabase (no local file system)
+const sqliteExists = existsSync(path.join(process.cwd(), "data", "ai-hub.db"));
 const useSupabase =
+  !sqliteExists &&
   !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
   !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
