@@ -119,8 +119,33 @@ export default function LLMConfig() {
     setTesting(false);
   }
 
+  const currentProvider = allPresets.find((p) => p.baseUrl === baseUrl);
+
   return (
     <div className="space-y-6">
+      {/* Current Status */}
+      <div className={`rounded-xl border p-4 ${
+        configured
+          ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20"
+          : "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20"
+      }`}>
+        <div className="flex items-center gap-3">
+          <span className={`flex h-3 w-3 rounded-full ${configured ? "bg-green-500" : "bg-amber-500"}`}>
+            {configured && <span className="h-3 w-3 rounded-full bg-green-500 animate-ping absolute" />}
+          </span>
+          <div>
+            <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              {configured
+                ? `${locale === "zh" ? "当前模型" : "Active"}: ${currentProvider?.name || baseUrl.replace(/https?:\/\//, "").split("/")[0]} — ${model}`
+                : (locale === "zh" ? "未配置 LLM — 请在下方设置" : "LLM not configured — set up below")}
+            </p>
+            {configured && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{baseUrl}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Quick Presets */}
       <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800/50">
         <h3 className="font-medium text-slate-900 dark:text-slate-100 mb-3">
