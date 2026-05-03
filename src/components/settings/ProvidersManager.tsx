@@ -120,9 +120,30 @@ export default function ProvidersManager() {
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-            <input placeholder={locale === "zh" ? "国家代码（如 US, CN, FR）" : "Country code (e.g. US, CN, FR)"}
-              value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value.toUpperCase() })}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
+            <div className="relative">
+              <select
+                value={countryCodes.includes(form.country) ? form.country : "__custom"}
+                onChange={(e) => {
+                  if (e.target.value !== "__custom") setForm({ ...form, country: e.target.value });
+                }}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              >
+                {countryCodes.map((code) => (
+                  <option key={code} value={code}>
+                    {getFlag(code)} {locale === "zh" ? countries[code].nameZh : countries[code].nameEn} ({code})
+                  </option>
+                ))}
+                <option value="__custom">{locale === "zh" ? "其他（手动输入）" : "Other (type below)"}</option>
+              </select>
+              {!countryCodes.includes(form.country) && (
+                <input
+                  placeholder={locale === "zh" ? "输入国家代码（如 JP, KR）" : "Country code (e.g. JP, KR)"}
+                  value={form.country === "US" ? "" : form.country}
+                  onChange={(e) => setForm({ ...form, country: e.target.value.toUpperCase() })}
+                  className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                />
+              )}
+            </div>
             <input placeholder={locale === "zh" ? "标签（逗号分隔）" : "Tags (comma separated)"}
               value={tagsInput} onChange={(e) => setTagsInput(e.target.value)}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm sm:col-span-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
