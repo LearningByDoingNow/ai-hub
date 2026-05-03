@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useLocale } from "@/i18n/context";
 import LanguageSwitcher from "./LanguageSwitcher";
+import ThemeToggle from "./ThemeToggle";
 
 interface Module {
   id: string;
@@ -93,10 +94,8 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-lg dark:border-slate-800 dark:bg-slate-950/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-3 shrink-0">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 text-white font-bold text-sm">
-            AI
-          </div>
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <img src="/logo.svg" alt="AI Hub" className="h-9 w-9" />
           <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
             AI Hub
           </span>
@@ -146,6 +145,7 @@ export default function Navbar() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </Link>
+          <ThemeToggle />
           <LanguageSwitcher />
         </div>
       </div>
