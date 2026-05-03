@@ -1,0 +1,64 @@
+name: Fetch AI News & Papers
+
+on:
+  schedule:
+    # News: every 4 hours
+    - cron: '17 */4 * * *'
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'What to fetch'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - news
+          - papers
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch news
+        if: github.event.inputs.task != 'papers'
+        run: node scripts/engine.mjs once
+
+      - name: Fetch papers
+        if: github.event.inputs.task != 'news'
+        run: node scripts/fetch-papers.mjs
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet data/ai-hub.db; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "AI Hub Bot"
+          git config user.email "bot@ai-hub.dev"
+          git add data/ai-hub.db data/ai-hub.db-wal data/ai-hub.db-shm 2>/dev/null || true
+          NEWS_COUNT=$(node -e "const D=require('better-sqlite3');const d=new D('data/ai-hub.db');console.log(d.prepare('SELECT COUNT(*) as c FROM news').get().c);d.close()")
+          PAPER_COUNT=$(node -e "const D=require('better-sqlite3');const d=new D('data/ai-hub.db');console.log(d.prepare('SELECT COUNT(*) as c FROM papers').get().c);d.close()")
+          git commit -m "auto: fetch update — ${NEWS_COUNT} news, ${PAPER_COUNT} papers [skip ci]"
+          git push
