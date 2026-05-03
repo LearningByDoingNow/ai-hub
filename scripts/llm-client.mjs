@@ -1,8 +1,13 @@
 /**
- * AI Hub LLM Client
- * Supports multiple providers with their native API formats:
- * - OpenAI compatible: OpenAI, DeepSeek, OpenRouter, Groq, Together, etc.
- * - Anthropic: Claude native API
+ * AI Hub Universal LLM Client
+ *
+ * Supports ALL OpenAI-compatible and Anthropic-compatible APIs:
+ * OpenAI, DeepSeek, OpenRouter, Groq, Together, SiliconFlow,
+ * Xiaomi MiMo, Moonshot, Zhipu, Baichuan, MiniMax, 01.AI,
+ * Azure OpenAI, Anthropic Claude, and any custom endpoint.
+ *
+ * Auto-detects API format from base URL.
+ * Handles URL normalization (with/without /v1, trailing slashes).
  */
 
 import Database from "better-sqlite3";
@@ -12,57 +17,6 @@ import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dbPath = join(__dirname, "../data/ai-hub.db");
-
-const PROVIDER_PRESETS = {
-  openai: {
-    name: "OpenAI",
-    baseUrl: "https://api.openai.com/v1",
-    format: "openai",
-    defaultModel: "gpt-4o-mini",
-  },
-  anthropic: {
-    name: "Anthropic",
-    baseUrl: "https://api.anthropic.com",
-    format: "anthropic",
-    defaultModel: "claude-sonnet-4-6",
-  },
-  deepseek: {
-    name: "DeepSeek",
-    baseUrl: "https://api.deepseek.com/v1",
-    format: "openai",
-    defaultModel: "deepseek-chat",
-  },
-  openrouter: {
-    name: "OpenRouter",
-    baseUrl: "https://openrouter.ai/api/v1",
-    format: "openai",
-    defaultModel: "deepseek/deepseek-chat-v3-0324:free",
-  },
-  groq: {
-    name: "Groq",
-    baseUrl: "https://api.groq.com/openai/v1",
-    format: "openai",
-    defaultModel: "llama-3.3-70b-versatile",
-  },
-  together: {
-    name: "Together AI",
-    baseUrl: "https://api.together.xyz/v1",
-    format: "openai",
-    defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-  },
-  siliconflow: {
-    name: "SiliconFlow",
-    baseUrl: "https://api.siliconflow.cn/v1",
-    format: "openai",
-    defaultModel: "deepseek-ai/DeepSeek-V3",
-  },
-  custom: {
-    name: "Custom",
-    baseUrl: "",
-    format: "openai",
-    defaultModel: "",
-  },
-};
 
 function readEnvFile(key) {
   try {
@@ -80,12 +34,33 @@ function getLLMConfig() {
   const apiKey = process.env.LLM_API_KEY || readEnvFile("LLM_API_KEY") || "";
   const baseUrl = process.env.LLM_BASE_URL || readEnvFile("LLM_BASE_URL") || "";
   const model = process.env.LLM_MODEL || readEnvFile("LLM_MODEL") || "";
-  const format = baseUrl.includes("anthropic.com") ? "anthropic" : "openai";
-  return { apiKey, baseUrl, model, format };
+  return { apiKey, baseUrl, model };
 }
 
-async function callOpenAIFormat(baseUrl, apiKey, model, systemPrompt, userPrompt) {
-  const res = await fetch(`${baseUrl}/chat/completions`, {
+// Normalize base URL: strip trailing slash, detect format
+function normalizeUrl(baseUrl) {
+  let url = baseUrl.replace(/\/+$/, "");
+
+  // Detect Anthropic
+  if (url.includes("anthropic.com")) {
+    return { chatUrl: url.replace(/\/v1$/, "") + "/v1/messages", format: "anthropic" };
+  }
+
+  // OpenAI-compatible: ensure we get to /chat/completions
+  // Handle: "https://api.x.com", "https://api.x.com/v1", "https://api.x.com/v1/"
+  if (url.endsWith("/chat/completions")) {
+    return { chatUrl: url, format: "openai" };
+  }
+  if (url.endsWith("/v1")) {
+    return { chatUrl: url + "/chat/completions", format: "openai" };
+  }
+  // Some APIs don't need /v1 (e.g. DeepSeek works both ways)
+  // Try with /v1 first as it's more standard
+  return { chatUrl: url + "/v1/chat/completions", fallbackUrl: url + "/chat/completions", format: "openai" };
+}
+
+async function callOpenAI(chatUrl, apiKey, model, systemPrompt, userPrompt) {
+  const res = await fetch(chatUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -101,18 +76,16 @@ async function callOpenAIFormat(baseUrl, apiKey, model, systemPrompt, userPrompt
       max_tokens: 1000,
     }),
   });
-
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`API error ${res.status}: ${err}`);
+    throw new Error(`${res.status}: ${err.slice(0, 200)}`);
   }
-
   const data = await res.json();
-  return data.choices[0].message.content;
+  return data.choices?.[0]?.message?.content || "";
 }
 
-async function callAnthropicFormat(baseUrl, apiKey, model, systemPrompt, userPrompt) {
-  const res = await fetch(`${baseUrl}/v1/messages`, {
+async function callAnthropic(chatUrl, apiKey, model, systemPrompt, userPrompt) {
+  const res = await fetch(chatUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -127,36 +100,38 @@ async function callAnthropicFormat(baseUrl, apiKey, model, systemPrompt, userPro
       temperature: 0.3,
     }),
   });
-
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`API error ${res.status}: ${err}`);
+    throw new Error(`${res.status}: ${err.slice(0, 200)}`);
   }
-
   const data = await res.json();
-  return data.content[0].text;
+  return data.content?.[0]?.text || "";
 }
 
 export async function chat(systemPrompt, userPrompt) {
   const config = getLLMConfig();
-  if (!config || !config.apiKey) {
-    throw new Error("LLM not configured. Go to Settings → LLM Config to set up.");
+  if (!config.apiKey || !config.baseUrl) {
+    throw new Error("LLM not configured. Set LLM_BASE_URL, LLM_API_KEY, LLM_MODEL in .env.local");
   }
 
-  const preset = PROVIDER_PRESETS[config.provider] || PROVIDER_PRESETS.custom;
-  const baseUrl = config.baseUrl || preset.baseUrl;
-  const model = config.model || preset.defaultModel;
-  const format = config.format || preset.format;
+  const { chatUrl, fallbackUrl, format } = normalizeUrl(config.baseUrl);
 
   if (format === "anthropic") {
-    return callAnthropicFormat(baseUrl, config.apiKey, model, systemPrompt, userPrompt);
+    return callAnthropic(chatUrl, config.apiKey, config.model, systemPrompt, userPrompt);
   }
-  return callOpenAIFormat(baseUrl, config.apiKey, model, systemPrompt, userPrompt);
+
+  // OpenAI compatible — try primary URL, fallback if 404
+  try {
+    return await callOpenAI(chatUrl, config.apiKey, config.model, systemPrompt, userPrompt);
+  } catch (e) {
+    if (fallbackUrl && e.message.startsWith("404")) {
+      return callOpenAI(fallbackUrl, config.apiKey, config.model, systemPrompt, userPrompt);
+    }
+    throw e;
+  }
 }
 
 export function isLLMConfigured() {
   const config = getLLMConfig();
-  return !!(config && config.apiKey);
+  return !!(config.apiKey && config.baseUrl);
 }
-
-export { PROVIDER_PRESETS };
