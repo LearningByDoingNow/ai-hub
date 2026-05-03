@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "fetch": "node scripts/engine.mjs once",
+    "fetch:papers": "node scripts/fetch-papers.mjs",
+    "fetch:all": "node scripts/engine.mjs once && node scripts/fetch-papers.mjs",
     "fetch:schedule": "node scripts/engine.mjs schedule 4"
   },
   "dependencies": {
