@@ -1,6 +1,6 @@
 export const zh: Record<string, string> = {
   // Navbar
-  "nav.products": "产品导航",
+  "nav.products": "AI产品导航",
   "nav.news": "AI 资讯",
   "nav.papers": "论文追踪",
 
@@ -44,7 +44,7 @@ export const zh: Record<string, string> = {
   "home.viewAll": "查看全部",
 
   // Providers page
-  "providers.title": "产品导航",
+  "providers.title": "AI产品导航",
   "providers.subtitle": "汇集全球 AI 公司的产品、开放平台与文档",
   "providers.count": "共 {count} 家供应商",
   "providers.empty": "没有找到匹配的供应商",

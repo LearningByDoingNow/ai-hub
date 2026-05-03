@@ -1,6 +1,6 @@
 export const en: Record<string, string> = {
   // Navbar
-  "nav.products": "Products",
+  "nav.products": "AI Products",
   "nav.news": "News",
   "nav.papers": "Papers",
 
@@ -44,7 +44,7 @@ export const en: Record<string, string> = {
   "home.viewAll": "View All",
 
   // Providers page
-  "providers.title": "Product Directory",
+  "providers.title": "AI Products",
   "providers.subtitle": "Explore AI products, platforms, and documentation worldwide",
   "providers.count": "{count} providers",
   "providers.empty": "No matching providers found",

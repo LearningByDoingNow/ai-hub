@@ -3,10 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocale } from "@/i18n/context";
 import { categories } from "@/lib/constants";
+import { countries, getFlag } from "@/lib/countries";
 import type { Provider } from "@/types";
 
+const countryCodes = Object.keys(countries);
+
 const emptyForm: Provider = {
-  id: "", name: "", description: "", category: "大模型", country: "国外",
+  id: "", name: "", description: "", category: "大模型", country: "US",
   links: [{ label: "", url: "" }], tags: [],
 };
 
@@ -117,11 +120,9 @@ export default function ProvidersManager() {
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-            <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value as "国内" | "国外" })}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-              <option value="国外">{locale === "zh" ? "国外" : "International"}</option>
-              <option value="国内">{locale === "zh" ? "国内" : "China"}</option>
-            </select>
+            <input placeholder={locale === "zh" ? "国家代码（如 US, CN, FR）" : "Country code (e.g. US, CN, FR)"}
+              value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value.toUpperCase() })}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
             <input placeholder={locale === "zh" ? "标签（逗号分隔）" : "Tags (comma separated)"}
               value={tagsInput} onChange={(e) => setTagsInput(e.target.value)}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm sm:col-span-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
