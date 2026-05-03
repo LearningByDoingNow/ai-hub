@@ -114,14 +114,14 @@ export function getProviders(): Provider[] {
 
 export function getNews(limit?: number): NewsItem[] {
   const db = getDb();
-  if (limit) return db.prepare("SELECT * FROM news ORDER BY date DESC LIMIT ?").all(limit).map(mapNews);
-  return db.prepare("SELECT * FROM news ORDER BY date DESC").all().map(mapNews);
+  if (limit) return db.prepare("SELECT * FROM news ORDER BY created_at DESC LIMIT ?").all(limit).map(mapNews);
+  return db.prepare("SELECT * FROM news ORDER BY created_at DESC").all().map(mapNews);
 }
 
 export function getPapers(limit?: number): Paper[] {
   const db = getDb();
-  if (limit) return db.prepare("SELECT * FROM papers ORDER BY date DESC LIMIT ?").all(limit).map(mapPaper);
-  return db.prepare("SELECT * FROM papers ORDER BY date DESC").all().map(mapPaper);
+  if (limit) return db.prepare("SELECT * FROM papers ORDER BY created_at DESC LIMIT ?").all(limit).map(mapPaper);
+  return db.prepare("SELECT * FROM papers ORDER BY created_at DESC").all().map(mapPaper);
 }
 
 export function getSources(): Source[] {

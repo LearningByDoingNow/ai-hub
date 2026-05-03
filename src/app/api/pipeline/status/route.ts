@@ -20,7 +20,7 @@ export async function GET() {
 
   const recentNews = sdb
     .prepare(
-      "SELECT id, title, source, date, created_at FROM news ORDER BY date DESC, created_at DESC LIMIT 15"
+      "SELECT id, title, source, date, created_at FROM news ORDER BY created_at DESC LIMIT 15"
     )
     .all();
 

@@ -34,7 +34,7 @@ export async function getNews(limit?: number): Promise<NewsItem[]> {
   if (useSupabase) {
     const { createServerSupabase } = await import("./supabase/server");
     const supabase = await createServerSupabase();
-    let query = supabase.from("news").select("*").order("date", { ascending: false });
+    let query = supabase.from("news").select("*").order("created_at", { ascending: false });
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) {
@@ -52,7 +52,7 @@ export async function getPapers(limit?: number): Promise<Paper[]> {
   if (useSupabase) {
     const { createServerSupabase } = await import("./supabase/server");
     const supabase = await createServerSupabase();
-    let query = supabase.from("papers").select("*").order("date", { ascending: false });
+    let query = supabase.from("papers").select("*").order("created_at", { ascending: false });
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) {
