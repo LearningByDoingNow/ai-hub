@@ -1,6 +1,7 @@
 /**
  * AI Hub Fetch Engine v2
  * Multi-strategy: RSS + Web Scrape + API
+ * Parallel fetching for speed
  */
 
 import Database from "better-sqlite3";
@@ -36,12 +37,30 @@ function getEnabledSources(db) {
   return db.prepare("SELECT * FROM sources WHERE enabled = 1").all();
 }
 
+function localTime() {
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  }).format(new Date());
+}
+
+function localDate() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 async function runFetch() {
   const db = getDb();
   const sources = getEnabledSources(db);
-  const timestamp = new Date().toLocaleString();
+  const startTime = Date.now();
 
-  console.log(`\n[${timestamp}] Fetching from ${sources.length} sources...`);
+  console.log(`\n[${localTime()}] Fetching from ${sources.length} sources (parallel)...`);
+
+  // Parallel fetch all sources
+  const results = await Promise.allSettled(
+    sources.map((source) => fetchSource(source).then((r) => ({ ...r, source })))
+  );
 
   const insertNews = db.prepare(
     "INSERT OR IGNORE INTO news (id, title, title_en, source, date, summary, summary_en, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
@@ -50,43 +69,46 @@ async function runFetch() {
   let totalNew = 0;
   let totalErrors = 0;
 
-  for (const source of sources) {
-    const result = await fetchSource(source);
+  const insertAll = db.transaction(() => {
+    for (const settled of results) {
+      if (settled.status === "rejected") {
+        totalErrors++;
+        continue;
+      }
 
-    if (result.error) {
-      console.log(`  ✗ ${result.source} [${source.type || "rss"}]: ${result.error}`);
-      totalErrors++;
-      continue;
-    }
+      const result = settled.value;
+      if (result.error) {
+        console.log(`  ✗ ${result.source.name} [${result.source.type || "rss"}]: ${result.error}`);
+        totalErrors++;
+        continue;
+      }
 
-    // Filter AI-related (skip for scrape type — user explicitly added the source)
-    const filtered = source.type === "scrape"
-      ? result.items
-      : result.items.filter((item) => isAIRelated(item.title, item.summary));
+      const filtered = result.source.type === "scrape"
+        ? result.items
+        : result.items.filter((item) => isAIRelated(item.title, item.summary));
 
-    const insertMany = db.transaction((items) => {
       let added = 0;
-      for (const item of items) {
+      for (const item of filtered) {
+        // Use local date if article has no date
+        if (!item.date || item.date === "NaN-NaN-NaN") item.date = localDate();
         const r = insertNews.run(
-          item.id, item.title, item.title_en, item.source,
+          item.id, item.title, item.title_en, item.source.name || item.source,
           item.date, item.summary, item.summary_en, item.url
         );
         if (r.changes > 0) added++;
       }
-      return added;
-    });
+      totalNew += added;
+      console.log(`  ✓ ${result.source.name} [${result.source.type || "rss"}]: ${result.items.length} found, ${filtered.length} relevant, ${added} new`);
+    }
+  });
+  insertAll();
 
-    const added = insertMany(filtered);
-    totalNew += added;
-    const typeLabel = source.type || "rss";
-    console.log(`  ✓ ${result.source} [${typeLabel}]: ${result.items.length} found, ${filtered.length} relevant, ${added} new`);
-  }
-
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   const total = db.prepare("SELECT COUNT(*) as count FROM news").get();
-  console.log(`\n  Done: +${totalNew} new, ${totalErrors} errors, ${total.count} total in DB`);
+  console.log(`\n  Done in ${elapsed}s: +${totalNew} new, ${totalErrors} errors, ${total.count} total`);
 
   db.prepare(
-    "INSERT INTO pipeline_runs (id, task_type, status, items_processed, completed_at) VALUES (hex(randomblob(16)), 'news', 'success', ?, datetime('now'))"
+    "INSERT INTO pipeline_runs (id, task_type, status, items_processed, completed_at) VALUES (hex(randomblob(16)), 'news', 'success', ?, datetime('now','localtime'))"
   ).run(totalNew);
 
   db.close();
@@ -100,12 +122,12 @@ const intervalHours = parseInt(args[1] || "4", 10);
 
 console.log("AI Hub Fetch Engine v2");
 console.log("======================");
-console.log(`Mode: ${mode}`);
+console.log(`Mode: ${mode} | Time: ${localTime()}`);
 console.log(`Strategies: RSS + Web Scrape + API\n`);
 
 if (mode === "once") {
   await runFetch();
-  console.log("\nDone. Run with 'schedule' to enable auto-fetching.");
+  console.log("\nDone.");
 } else if (mode === "schedule") {
   console.log(`Schedule: every ${intervalHours} hours`);
   console.log("Press Ctrl+C to stop.\n");

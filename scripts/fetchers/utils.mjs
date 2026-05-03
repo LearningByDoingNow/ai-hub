@@ -26,7 +26,8 @@ export function truncate(str, maxLen = 300) {
 }
 
 export function todayDate() {
-  return new Date().toISOString().split("T")[0];
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function parseDate(dateStr) {
@@ -34,7 +35,7 @@ export function parseDate(dateStr) {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return todayDate();
-    return d.toISOString().split("T")[0];
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   } catch {
     return todayDate();
   }
