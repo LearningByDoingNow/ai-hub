@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as sqlite from "@/lib/sqlite";
+import * as db from "@/lib/db";
 import type { Provider } from "@/types";
 
 export async function GET() {
-  const providers = sqlite.getProviders();
-  return NextResponse.json(providers);
+  return NextResponse.json(sqlite.getProviders());
 }
 
 export async function POST(req: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "id and name are required" }, { status: 400 });
   }
   try {
-    sqlite.createProvider(body);
+    await db.createProvider(body);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
@@ -26,7 +26,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
   try {
-    sqlite.updateProvider(body.id, body);
+    await db.updateProvider(body.id, body);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
@@ -38,6 +38,6 @@ export async function DELETE(req: NextRequest) {
   if (!id) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
-  sqlite.deleteProvider(id);
+  await db.deleteProvider(id);
   return NextResponse.json({ ok: true });
 }

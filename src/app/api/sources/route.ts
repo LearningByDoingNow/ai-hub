@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as sqlite from "@/lib/sqlite";
+import * as db from "@/lib/db";
 import type { Source } from "@/lib/sqlite";
 
 export async function GET() {
-  const sources = sqlite.getSources();
-  return NextResponse.json(sources);
+  return NextResponse.json(sqlite.getSources());
 }
 
 export async function POST(req: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "id, name, and url are required" }, { status: 400 });
   }
   try {
-    sqlite.createSource(body);
+    await db.createSource(body);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
@@ -26,7 +26,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
   try {
-    sqlite.updateSource(body.id, body);
+    await db.updateSource(body.id, body);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
@@ -38,6 +38,6 @@ export async function DELETE(req: NextRequest) {
   if (!id) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
-  sqlite.deleteSource(id);
+  await db.deleteSource(id);
   return NextResponse.json({ ok: true });
 }

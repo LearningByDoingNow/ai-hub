@@ -120,11 +120,15 @@ export default function ProvidersManager() {
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-            <div className="relative">
+            <div>
               <select
                 value={countryCodes.includes(form.country) ? form.country : "__custom"}
                 onChange={(e) => {
-                  if (e.target.value !== "__custom") setForm({ ...form, country: e.target.value });
+                  if (e.target.value === "__custom") {
+                    setForm({ ...form, country: "" });
+                  } else {
+                    setForm({ ...form, country: e.target.value });
+                  }
                 }}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
@@ -133,12 +137,12 @@ export default function ProvidersManager() {
                     {getFlag(code)} {locale === "zh" ? countries[code].nameZh : countries[code].nameEn} ({code})
                   </option>
                 ))}
-                <option value="__custom">{locale === "zh" ? "其他（手动输入）" : "Other (type below)"}</option>
+                <option value="__custom">{locale === "zh" ? "其他（手动输入）" : "Other (type manually)"}</option>
               </select>
               {!countryCodes.includes(form.country) && (
                 <input
-                  placeholder={locale === "zh" ? "输入国家代码（如 JP, KR）" : "Country code (e.g. JP, KR)"}
-                  value={form.country === "US" ? "" : form.country}
+                  placeholder={locale === "zh" ? "输入国家代码（如 JP, KR, AU）" : "Country code (e.g. JP, KR, AU)"}
+                  value={form.country}
                   onChange={(e) => setForm({ ...form, country: e.target.value.toUpperCase() })}
                   className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
