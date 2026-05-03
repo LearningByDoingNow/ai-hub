@@ -79,7 +79,7 @@ export default function LLMConfig() {
 
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
 
-  function applyPreset(preset: typeof PRESETS[0]) {
+  function applyPreset(preset: Preset) {
     setBaseUrl(preset.baseUrl);
     setModel(preset.model);
     setSaved(false);
