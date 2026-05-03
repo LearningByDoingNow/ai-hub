@@ -109,35 +109,35 @@ function mapPaper(row: Record<string, unknown>): Paper {
 }
 
 export function getProviders(): Provider[] {
-  return getDb().prepare("SELECT * FROM providers ORDER BY created_at ASC").all().map(mapProvider);
+  return getDb().prepare("SELECT * FROM providers ORDER BY created_at ASC").all().map((r) => mapProvider(r as Record<string, unknown>));
 }
 
 export function getNews(limit?: number): NewsItem[] {
   const db = getDb();
-  if (limit) return db.prepare("SELECT * FROM news ORDER BY created_at DESC LIMIT ?").all(limit).map(mapNews);
-  return db.prepare("SELECT * FROM news ORDER BY created_at DESC").all().map(mapNews);
+  if (limit) return db.prepare("SELECT * FROM news ORDER BY created_at DESC LIMIT ?").all(limit).map((r) => mapNews(r as Record<string, unknown>));
+  return db.prepare("SELECT * FROM news ORDER BY created_at DESC").all().map((r) => mapNews(r as Record<string, unknown>));
 }
 
 export function getPapers(limit?: number): Paper[] {
   const db = getDb();
-  if (limit) return db.prepare("SELECT * FROM papers ORDER BY created_at DESC LIMIT ?").all(limit).map(mapPaper);
-  return db.prepare("SELECT * FROM papers ORDER BY created_at DESC").all().map(mapPaper);
+  if (limit) return db.prepare("SELECT * FROM papers ORDER BY created_at DESC LIMIT ?").all(limit).map((r) => mapPaper(r as Record<string, unknown>));
+  return db.prepare("SELECT * FROM papers ORDER BY created_at DESC").all().map((r) => mapPaper(r as Record<string, unknown>));
 }
 
 export function getSources(): Source[] {
-  return getDb().prepare("SELECT * FROM sources ORDER BY created_at ASC").all().map((r: Record<string, unknown>) => ({
+  return getDb().prepare("SELECT * FROM sources ORDER BY created_at ASC").all().map((row) => { const r = row as Record<string, unknown>; return ({
     id: r.id as string, name: r.name as string, type: r.type as Source["type"],
     url: r.url as string, lang: r.lang as "zh" | "en",
     enabled: (r.enabled as number) === 1, module: r.module as string,
     moduleIds: r.module_ids ? JSON.parse(r.module_ids as string) : [r.module as string],
-  }));
+  }); });
 }
 
 export function getModules(): Module[] {
-  return getDb().prepare("SELECT * FROM modules ORDER BY sort_order ASC").all().map((r: Record<string, unknown>) => ({
+  return getDb().prepare("SELECT * FROM modules ORDER BY sort_order ASC").all().map((row) => { const r = row as Record<string, unknown>; return ({
     id: r.id as string, name: r.name as string, nameEn: r.name_en as string,
     icon: r.icon as string, sortOrder: r.sort_order as number,
-  }));
+  }); });
 }
 
 export function getConfig(key: string): unknown | null {
