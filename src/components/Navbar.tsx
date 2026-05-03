@@ -95,7 +95,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-lg dark:border-slate-800 dark:bg-slate-950/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <img src="/logo.png" alt="AI Hub" className="h-9 w-9 rounded-lg" />
+          <img src="/logo-icon.png" alt="AI Hub" className="h-10 w-10" />
           <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
             AI Hub
           </span>

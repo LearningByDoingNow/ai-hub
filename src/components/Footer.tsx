@@ -12,7 +12,7 @@ export default function Footer() {
         <div className="grid gap-8 sm:grid-cols-3">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <img src="/logo.png" alt="AI Hub" className="h-7 w-7 rounded-md" />
+              <img src="/logo-icon.png" alt="AI Hub" className="h-7 w-7" />
               <span className="font-bold text-slate-900 dark:text-slate-100">
                 AI Hub
               </span>

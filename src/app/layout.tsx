@@ -19,8 +19,8 @@ export const metadata: Metadata = {
   title: "AI Hub - Discover · Monitor · Connect",
   description: "AI Hub — Your customizable hub for AI products, news, and research papers. Discover, monitor, and connect with the global AI ecosystem.",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: "/favicon.png",
+    apple: "/logo-icon.png",
   },
 };
 
