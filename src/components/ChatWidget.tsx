@@ -42,6 +42,11 @@ export default function ChatWidget() {
   const dragStart = useRef({ x: 0, y: 0, px: 0, py: 0 });
   const hasMoved = useRef(false);
 
+  // Resize state
+  const [size, setSize] = useState({ w: 384, h: 520 });
+  const resizing = useRef(false);
+  const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
+
   useEffect(() => {
     setPos({ x: window.innerWidth - 80, y: window.innerHeight - 80 });
     setMounted(true);
@@ -254,9 +259,41 @@ export default function ChatWidget() {
       {/* Chat Panel */}
       {open && (
         <div
-          className="fixed z-50 flex w-96 flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
-          style={{ height: "520px", left: Math.min(pos.x, window.innerWidth - 400), top: Math.max(0, pos.y - 530) }}
+          className="fixed z-50 flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+          style={{
+            width: size.w,
+            height: size.h,
+            left: Math.min(pos.x, window.innerWidth - size.w - 8),
+            top: Math.max(0, pos.y - size.h - 10),
+          }}
         >
+          {/* Resize handle — top-left corner */}
+          <div
+            onPointerDown={(e) => {
+              resizing.current = true;
+              resizeStart.current = { x: e.clientX, y: e.clientY, w: size.w, h: size.h };
+              (e.target as HTMLElement).setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+              if (!resizing.current) return;
+              const dw = resizeStart.current.x - e.clientX;
+              const dh = resizeStart.current.y - e.clientY;
+              setSize({
+                w: Math.max(320, Math.min(800, resizeStart.current.w + dw)),
+                h: Math.max(400, Math.min(900, resizeStart.current.h + dh)),
+              });
+            }}
+            onPointerUp={() => { resizing.current = false; }}
+            style={{ touchAction: "none" }}
+            className="absolute -top-1 -left-1 z-10 h-4 w-4 cursor-nw-resize"
+            title="Drag to resize"
+          >
+            <svg className="h-4 w-4 text-slate-300 dark:text-slate-600" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="3" cy="3" r="1.5" />
+              <circle cx="8" cy="3" r="1.5" />
+              <circle cx="3" cy="8" r="1.5" />
+            </svg>
+          </div>
           {/* Header */}
           <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-700">
             <img src="/logo-transparent.png" alt="" className="h-8 w-8" />
