@@ -11,23 +11,13 @@ interface Module {
   sortOrder: number;
 }
 
-const ICONS = [
-  { value: "newspaper", label: "Newspaper" },
-  { value: "book", label: "Book" },
-  { value: "grid", label: "Grid" },
-  { value: "globe", label: "Globe" },
-  { value: "code", label: "Code" },
-  { value: "chart", label: "Chart" },
-  { value: "rss", label: "RSS" },
-  { value: "star", label: "Star" },
-];
-
 export default function ModulesManager() {
   const { locale } = useLocale();
   const [modules, setModules] = useState<Module[]>([]);
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ name: "", nameEn: "", icon: "rss" });
+  const [form, setForm] = useState({ name: "", nameEn: "" });
   const [loading, setLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const fetchModules = useCallback(async () => {
     const res = await fetch("/api/modules");
@@ -48,22 +38,22 @@ export default function ModulesManager() {
         id,
         name: form.name,
         nameEn: form.nameEn || form.name,
-        icon: form.icon,
+        icon: "rss",
         sortOrder: modules.length,
       }),
     });
-    setForm({ name: "", nameEn: "", icon: "rss" });
+    setForm({ name: "", nameEn: "" });
     setShowAdd(false);
     fetchModules();
   }
 
   async function deleteModule(id: string) {
-    if (["providers", "news", "papers"].includes(id)) return;
     await fetch("/api/modules", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
+    setConfirmDelete(null);
     fetchModules();
   }
 
@@ -87,7 +77,7 @@ export default function ModulesManager() {
 
       {showAdd && (
         <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <input
               placeholder={locale === "zh" ? "模块名称（如 国际时政）" : "Module name"}
               value={form.name}
@@ -100,15 +90,6 @@ export default function ModulesManager() {
               onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
-            <select
-              value={form.icon}
-              onChange={(e) => setForm({ ...form, icon: e.target.value })}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-            >
-              {ICONS.map((i) => (
-                <option key={i.value} value={i.value}>{i.label}</option>
-              ))}
-            </select>
           </div>
           <div className="mt-3 flex gap-2">
             <button onClick={addModule}
@@ -131,9 +112,6 @@ export default function ModulesManager() {
               className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800/50"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400 text-sm">
-                  {m.icon === "newspaper" ? "📰" : m.icon === "book" ? "📄" : m.icon === "grid" ? "📦" : m.icon === "globe" ? "🌍" : m.icon === "code" ? "💻" : m.icon === "chart" ? "📊" : m.icon === "star" ? "⭐" : "📡"}
-                </div>
                 <div>
                   <span className="font-medium text-slate-900 dark:text-slate-100">{m.name}</span>
                   {m.nameEn && m.nameEn !== m.name && (
@@ -147,12 +125,24 @@ export default function ModulesManager() {
                 </div>
               </div>
               {!isBuiltin && (
-                <button onClick={() => deleteModule(m.id)}
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                confirmDelete === m.id ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-red-500">{locale === "zh" ? "确认删除？" : "Confirm?"}</span>
+                    <button onClick={() => deleteModule(m.id)}
+                      className="rounded-lg bg-red-500 px-3 py-1 text-xs font-medium text-white hover:bg-red-600">
+                      {locale === "zh" ? "删除" : "Delete"}
+                    </button>
+                    <button onClick={() => setConfirmDelete(null)}
+                      className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-300">
+                      {locale === "zh" ? "取消" : "Cancel"}
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDelete(m.id)}
+                    className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30">
+                    {locale === "zh" ? "删除" : "Delete"}
+                  </button>
+                )
               )}
             </div>
           );
