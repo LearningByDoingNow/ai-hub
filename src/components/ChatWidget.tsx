@@ -236,25 +236,19 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Floating Button */}
-      <div
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onClick={handleClick}
-        style={{ left: pos.x, top: pos.y, touchAction: "none" }}
-        className={`fixed z-50 flex h-14 w-14 cursor-grab items-center justify-center rounded-full shadow-lg transition-shadow active:cursor-grabbing active:shadow-xl ${
-          open ? "bg-slate-700 text-white" : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-        }`}
-      >
-        {open ? (
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        ) : (
+      {/* Floating Button — always shows pearl, only opens */}
+      {!open && (
+        <div
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onClick={handleClick}
+          style={{ left: pos.x, top: pos.y, touchAction: "none" }}
+          className="fixed z-50 flex h-14 w-14 cursor-grab items-center justify-center rounded-full shadow-lg transition-shadow active:cursor-grabbing active:shadow-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:shadow-xl"
+        >
           <img src="/logo-transparent.png" alt="Chat" className="h-10 w-10 pointer-events-none" />
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Chat Panel */}
       {open && (
@@ -295,14 +289,24 @@ export default function ChatWidget() {
             </svg>
           </div>
           {/* Header */}
-          <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-            <img src="/logo-transparent.png" alt="" className="h-8 w-8" />
-            <div>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">AI Hub Assistant</h3>
-              <p className="text-xs text-slate-400">
-                {locale === "zh" ? "输入 @ 引用文章让 AI 分析" : "Type @ to reference articles for AI analysis"}
-              </p>
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+            <div className="flex items-center gap-2">
+              <img src="/logo-transparent.png" alt="" className="h-8 w-8" />
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">AI Hub Assistant</h3>
+                <p className="text-xs text-slate-400">
+                  {locale === "zh" ? "输入 @ 引用文章让 AI 分析" : "Type @ to reference articles for AI analysis"}
+                </p>
+              </div>
             </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
           {/* Messages */}

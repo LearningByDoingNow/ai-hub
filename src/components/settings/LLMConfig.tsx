@@ -20,7 +20,6 @@ export default function LLMConfig() {
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("");
   const [temperature, setTemperature] = useState("0.5");
-  const [maxTokens, setMaxTokens] = useState("2000");
   const [reasoningEffort, setReasoningEffort] = useState("default");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -34,7 +33,6 @@ export default function LLMConfig() {
     if (data.baseUrl) setBaseUrl(data.baseUrl);
     if (data.model) setModel(data.model);
     if (data.temperature) setTemperature(data.temperature);
-    if (data.maxTokens) setMaxTokens(data.maxTokens);
     if (data.reasoningEffort) setReasoningEffort(data.reasoningEffort);
     setConfigured(!!data.apiKey);
   }, []);
@@ -54,7 +52,7 @@ export default function LLMConfig() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         baseUrl, apiKey: apiKey || undefined, model,
-        temperature, maxTokens, reasoningEffort,
+        temperature, reasoningEffort,
       }),
     });
     setSaving(false);
@@ -146,7 +144,7 @@ export default function LLMConfig() {
         </div>
 
         {/* Inference Parameters */}
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               Temperature
@@ -159,19 +157,6 @@ export default function LLMConfig() {
               <span>{locale === "zh" ? "精确" : "Precise"}</span>
               <span>{locale === "zh" ? "创意" : "Creative"}</span>
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Max Tokens
-            </label>
-            <select value={maxTokens} onChange={(e) => { setMaxTokens(e.target.value); setSaved(false); }}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-              <option value="1000">1,000</option>
-              <option value="2000">2,000</option>
-              <option value="4000">4,000</option>
-              <option value="8000">8,000</option>
-              <option value="16000">16,000</option>
-            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
