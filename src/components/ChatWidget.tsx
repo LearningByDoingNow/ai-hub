@@ -139,17 +139,70 @@ export default function ChatWidget() {
     setAttachedItems([]);
     setLoading(true);
 
+    // Add empty assistant message for streaming
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessages }),
       });
-      const data = await res.json();
-      const reply = data.error ? `Error: ${data.error}` : data.reply;
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+
+      if (!res.ok) {
+        const data = await res.json();
+        setMessages((prev) => {
+          const copy = [...prev];
+          copy[copy.length - 1] = { role: "assistant", content: `Error: ${data.error || res.status}` };
+          return copy;
+        });
+        setLoading(false);
+        return;
+      }
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          // Parse SSE lines
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
+            try {
+              const json = JSON.parse(line.slice(6));
+              const delta = json.choices?.[0]?.delta?.content
+                || json.delta?.text
+                || "";
+              if (delta) {
+                setMessages((prev) => {
+                  const copy = [...prev];
+                  copy[copy.length - 1] = {
+                    role: "assistant",
+                    content: copy[copy.length - 1].content + delta,
+                  };
+                  return copy;
+                });
+              }
+            } catch { /* skip malformed */ }
+          }
+        }
+      }
     } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Network error" }]);
+      setMessages((prev) => {
+        const copy = [...prev];
+        if (copy[copy.length - 1].content === "") {
+          copy[copy.length - 1] = { role: "assistant", content: "Network error" };
+        }
+        return copy;
+      });
     }
     setLoading(false);
   }
