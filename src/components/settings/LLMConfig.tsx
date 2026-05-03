@@ -55,10 +55,12 @@ export default function LLMConfig() {
 
   async function save() {
     setSaving(true);
+    // Save non-sensitive config to database (no API key)
+    const { apiKey: _, ...safeConfig } = config;
     await fetch("/api/config", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: "llm", value: config }),
+      body: JSON.stringify({ key: "llm", value: safeConfig }),
     });
     setSaving(false);
     setSaved(true);
@@ -121,6 +123,11 @@ export default function LLMConfig() {
               onChange={(e) => { setConfig({ ...config, apiKey: e.target.value }); setSaved(false); }}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
+            <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+              {locale === "zh"
+                ? "安全提示：Key 仅用于测试连接，不会存入数据库。正式使用请在 .env.local 中设置 LLM_API_KEY=你的Key"
+                : "Security: Key is only used for testing. For production, set LLM_API_KEY in .env.local"}
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">

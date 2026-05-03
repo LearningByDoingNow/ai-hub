@@ -6,6 +6,7 @@
  */
 
 import Database from "better-sqlite3";
+import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
@@ -68,8 +69,23 @@ function getLLMConfig() {
   db.pragma("journal_mode = WAL");
   const row = db.prepare("SELECT value FROM pipeline_config WHERE key = 'llm'").get();
   db.close();
-  if (!row) return null;
-  return JSON.parse(row.value);
+  const config = row ? JSON.parse(row.value) : {};
+
+  // API Key: env var takes priority, then .env.local, never from database
+  const apiKey = process.env.LLM_API_KEY || readEnvFile("LLM_API_KEY") || "";
+  return { ...config, apiKey };
+}
+
+function readEnvFile(key) {
+  try {
+    const envPath = join(dirname(dbPath), "..", ".env.local");
+    const content = readFileSync(envPath, "utf-8");
+    for (const line of content.split("\n")) {
+      const [k, ...v] = line.split("=");
+      if (k && k.trim() === key) return v.join("=").trim();
+    }
+  } catch { /* no .env.local */ }
+  return "";
 }
 
 async function callOpenAIFormat(baseUrl, apiKey, model, systemPrompt, userPrompt) {
