@@ -86,7 +86,7 @@ function initTables(db: Database.Database) {
 function mapProvider(row: Record<string, unknown>): Provider {
   return {
     id: row.id as string, name: row.name as string, description: row.description as string,
-    category: row.category as string, country: row.country as "国内" | "国外",
+    category: row.category as string, country: row.country as string,
     links: JSON.parse(row.links as string), tags: JSON.parse(row.tags as string),
   };
 }

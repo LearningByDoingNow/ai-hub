@@ -3,12 +3,13 @@
 import { useState, useMemo } from "react";
 import type { Provider } from "@/types";
 import { useLocale } from "@/i18n/context";
+import { getFlag, getCountryName } from "@/lib/countries";
 import SearchBar from "@/components/SearchBar";
 import CategoryFilter from "@/components/CategoryFilter";
 import ProviderCard from "@/components/ProviderCard";
 
 export default function ProvidersClient({ providers }: { providers: Provider[] }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [country, setCountry] = useState<string | null>(null);
@@ -22,15 +23,29 @@ export default function ProvidersClient({ providers }: { providers: Provider[] }
         q &&
         !p.name.toLowerCase().includes(q) &&
         !p.description.toLowerCase().includes(q) &&
-        !p.tags.some((tag) => tag.toLowerCase().includes(q))
+        !p.tags.some((tag) => tag.toLowerCase().includes(q)) &&
+        !p.country.toLowerCase().includes(q) &&
+        !getCountryName(p.country, locale).toLowerCase().includes(q)
       )
         return false;
       return true;
     });
-  }, [search, category, country]);
+  }, [search, category, country, providers, locale]);
 
-  const domestic = filtered.filter((p) => p.country === "国内");
-  const international = filtered.filter((p) => p.country === "国外");
+  const groupedByCountry = useMemo(() => {
+    const groups: Record<string, Provider[]> = {};
+    for (const p of filtered) {
+      if (!groups[p.country]) groups[p.country] = [];
+      groups[p.country].push(p);
+    }
+    return Object.entries(groups).sort(([a], [b]) => {
+      if (a === "US") return -1;
+      if (b === "US") return 1;
+      if (a === "CN") return -1;
+      if (b === "CN") return 1;
+      return a.localeCompare(b);
+    });
+  }, [filtered]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -52,6 +67,7 @@ export default function ProvidersClient({ providers }: { providers: Provider[] }
         onSelect={setCategory}
         countryFilter={country}
         onCountryChange={setCountry}
+        providers={providers}
       />
 
       <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
@@ -65,31 +81,19 @@ export default function ProvidersClient({ providers }: { providers: Provider[] }
         </div>
       ) : (
         <div className="mt-6 space-y-8">
-          {(!country || country === "国外") && international.length > 0 && (
-            <section>
-              <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-200">
-                {t("providers.sectionInternational")}
+          {groupedByCountry.map(([code, items]) => (
+            <section key={code}>
+              <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <span className="text-xl">{getFlag(code)}</span>
+                {getCountryName(code, locale)}
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {international.map((p) => (
+                {items.map((p) => (
                   <ProviderCard key={p.id} provider={p} />
                 ))}
               </div>
             </section>
-          )}
-
-          {(!country || country === "国内") && domestic.length > 0 && (
-            <section>
-              <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-200">
-                {t("providers.sectionDomestic")}
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {domestic.map((p) => (
-                  <ProviderCard key={p.id} provider={p} />
-                ))}
-              </div>
-            </section>
-          )}
+          ))}
         </div>
       )}
     </div>

@@ -66,7 +66,7 @@ function mapSupabaseProvider(row: Record<string, unknown>): Provider {
     name: row.name as string,
     description: row.description as string,
     category: row.category as string,
-    country: row.country as "国内" | "国外",
+    country: row.country as string,
     links: row.links as { label: string; url: string }[],
     tags: row.tags as string[],
   };

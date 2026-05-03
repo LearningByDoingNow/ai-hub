@@ -2,28 +2,28 @@
 
 import { categories } from "@/lib/constants";
 import { useLocale } from "@/i18n/context";
+import { getFlag } from "@/lib/countries";
+import type { Provider } from "@/types";
 
 export default function CategoryFilter({
   selected,
   onSelect,
   countryFilter,
   onCountryChange,
+  providers,
 }: {
   selected: string | null;
   onSelect: (c: string | null) => void;
   countryFilter: string | null;
   onCountryChange: (c: string | null) => void;
+  providers: Provider[];
 }) {
   const { t } = useLocale();
 
-  const countryOptions: { value: string | null; key: string }[] = [
-    { value: null, key: "filter.global" },
-    { value: "国内", key: "filter.domestic" },
-    { value: "国外", key: "filter.international" },
-  ];
+  const countryCodes = Array.from(new Set(providers.map((p) => p.country))).sort();
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => onSelect(null)}
@@ -49,18 +49,28 @@ export default function CategoryFilter({
           </button>
         ))}
       </div>
-      <div className="flex gap-2 shrink-0">
-        {countryOptions.map((opt) => (
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => onCountryChange(null)}
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+            countryFilter === null
+              ? "bg-blue-600 text-white"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          }`}
+        >
+          🌐 {t("filter.global")}
+        </button>
+        {countryCodes.map((code) => (
           <button
-            key={opt.key}
-            onClick={() => onCountryChange(opt.value)}
+            key={code}
+            onClick={() => onCountryChange(countryFilter === code ? null : code)}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              countryFilter === opt.value
+              countryFilter === code
                 ? "bg-blue-600 text-white"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
             }`}
           >
-            {t(opt.key)}
+            {getFlag(code)} {code}
           </button>
         ))}
       </div>

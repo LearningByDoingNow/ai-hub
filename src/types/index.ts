@@ -8,7 +8,7 @@ export interface Provider {
   name: string;
   description: string;
   category: string;
-  country: "国内" | "国外";
+  country: string;
   links: ProviderLink[];
   tags: string[];
 }
