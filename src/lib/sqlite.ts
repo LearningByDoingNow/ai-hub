@@ -2,6 +2,14 @@ import Database from "better-sqlite3";
 import path from "path";
 import type { Provider, NewsItem, Paper } from "@/types";
 
+export interface Module {
+  id: string;
+  name: string;
+  nameEn: string;
+  icon: string;
+  sortOrder: number;
+}
+
 export interface Source {
   id: string;
   name: string;
@@ -9,7 +17,8 @@ export interface Source {
   url: string;
   lang: "zh" | "en";
   enabled: boolean;
-  module: "news" | "papers";
+  module: string;
+  moduleIds: string[];
 }
 
 const DB_PATH = path.join(process.cwd(), "data", "ai-hub.db");
@@ -49,6 +58,12 @@ function initTables(db: Database.Database) {
       id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'rss',
       url TEXT NOT NULL, lang TEXT NOT NULL DEFAULT 'en',
       enabled INTEGER NOT NULL DEFAULT 1, module TEXT NOT NULL DEFAULT 'news',
+      module_ids TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS modules (
+      id TEXT PRIMARY KEY, name TEXT NOT NULL, name_en TEXT NOT NULL DEFAULT '',
+      icon TEXT NOT NULL DEFAULT 'rss', sort_order INTEGER NOT NULL DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS pipeline_config (
@@ -113,7 +128,15 @@ export function getSources(): Source[] {
   return getDb().prepare("SELECT * FROM sources ORDER BY created_at ASC").all().map((r: Record<string, unknown>) => ({
     id: r.id as string, name: r.name as string, type: r.type as Source["type"],
     url: r.url as string, lang: r.lang as "zh" | "en",
-    enabled: (r.enabled as number) === 1, module: r.module as Source["module"],
+    enabled: (r.enabled as number) === 1, module: r.module as string,
+    moduleIds: r.module_ids ? JSON.parse(r.module_ids as string) : [r.module as string],
+  }));
+}
+
+export function getModules(): Module[] {
+  return getDb().prepare("SELECT * FROM modules ORDER BY sort_order ASC").all().map((r: Record<string, unknown>) => ({
+    id: r.id as string, name: r.name as string, nameEn: r.name_en as string,
+    icon: r.icon as string, sortOrder: r.sort_order as number,
   }));
 }
 
@@ -156,9 +179,10 @@ export function deleteProvider(id: string): void {
 // ============ WRITE: Sources ============
 
 export function createSource(s: Source): void {
+  const moduleIds = s.moduleIds?.length ? s.moduleIds : [s.module || "news"];
   getDb().prepare(
-    "INSERT INTO sources (id, name, type, url, lang, enabled, module) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  ).run(s.id, s.name, s.type, s.url, s.lang, s.enabled ? 1 : 0, s.module);
+    "INSERT INTO sources (id, name, type, url, lang, enabled, module, module_ids) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  ).run(s.id, s.name, s.type, s.url, s.lang, s.enabled ? 1 : 0, moduleIds[0], JSON.stringify(moduleIds));
 }
 
 export function updateSource(id: string, s: Partial<Source>): void {
@@ -166,13 +190,34 @@ export function updateSource(id: string, s: Partial<Source>): void {
   const existing = db.prepare("SELECT * FROM sources WHERE id = ?").get(id) as Record<string, unknown> | undefined;
   if (!existing) throw new Error("Source not found");
 
+  const moduleIds = s.moduleIds ? JSON.stringify(s.moduleIds) : null;
+  const module = s.moduleIds?.length ? s.moduleIds[0] : null;
   db.prepare(
-    "UPDATE sources SET name=COALESCE(?,name), type=COALESCE(?,type), url=COALESCE(?,url), lang=COALESCE(?,lang), enabled=COALESCE(?,enabled), module=COALESCE(?,module) WHERE id=?"
-  ).run(s.name ?? null, s.type ?? null, s.url ?? null, s.lang ?? null, s.enabled !== undefined ? (s.enabled ? 1 : 0) : null, s.module ?? null, id);
+    "UPDATE sources SET name=COALESCE(?,name), type=COALESCE(?,type), url=COALESCE(?,url), lang=COALESCE(?,lang), enabled=COALESCE(?,enabled), module=COALESCE(?,module), module_ids=COALESCE(?,module_ids) WHERE id=?"
+  ).run(s.name ?? null, s.type ?? null, s.url ?? null, s.lang ?? null, s.enabled !== undefined ? (s.enabled ? 1 : 0) : null, module, moduleIds, id);
 }
 
 export function deleteSource(id: string): void {
   getDb().prepare("DELETE FROM sources WHERE id = ?").run(id);
+}
+
+// ============ WRITE: Modules ============
+
+export function createModule(m: Module): void {
+  getDb().prepare(
+    "INSERT INTO modules (id, name, name_en, icon, sort_order) VALUES (?, ?, ?, ?, ?)"
+  ).run(m.id, m.name, m.nameEn, m.icon, m.sortOrder);
+}
+
+export function updateModule(id: string, m: Partial<Module>): void {
+  const db = getDb();
+  db.prepare(
+    "UPDATE modules SET name=COALESCE(?,name), name_en=COALESCE(?,name_en), icon=COALESCE(?,icon), sort_order=COALESCE(?,sort_order) WHERE id=?"
+  ).run(m.name ?? null, m.nameEn ?? null, m.icon ?? null, m.sortOrder ?? null, id);
+}
+
+export function deleteModule(id: string): void {
+  getDb().prepare("DELETE FROM modules WHERE id = ?").run(id);
 }
 
 // ============ WRITE: Config ============
