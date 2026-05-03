@@ -16,8 +16,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Hub - Global AI Product Navigation",
-  description: "一站式发现和访问国内外 AI 公司的产品、开放平台与文档",
+  title: "AI Hub - Discover · Monitor · Connect",
+  description: "AI Hub — Your customizable hub for AI products, news, and research papers. Discover, monitor, and connect with the global AI ecosystem.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
