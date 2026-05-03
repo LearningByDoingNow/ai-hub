@@ -2,8 +2,8 @@ name: Fetch AI News & Papers
 
 on:
   schedule:
-    # News: every 4 hours
-    - cron: '17 */4 * * *'
+    # Every hour
+    - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
       task:

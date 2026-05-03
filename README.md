@@ -5,7 +5,7 @@
 <h1 align="center">AI Hub</h1>
 
 <p align="center">
-  <strong>Your all-in-one AI industry intelligence platform</strong>
+  <strong>All-in-one AI Industry Intelligence Platform</strong>
 </p>
 
 <p align="center">
@@ -13,12 +13,24 @@
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> &bull;
-  <a href="#demo">Demo</a> &bull;
-  <a href="#getting-started">Getting Started</a> &bull;
-  <a href="#deployment">Deployment</a> &bull;
-  <a href="#architecture">Architecture</a> &bull;
-  <a href="#contributing">Contributing</a>
+  <a href="https://ai-hub-zeta-ten.vercel.app">Live Demo</a> &bull;
+  <a href="./README.zh-CN.md">中文文档</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19-blue?logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
+</p>
+
+---
+
+<p align="center">
+  <a href="https://ai-hub-zeta-ten.vercel.app">
+    <img src="docs/screenshots/home.png" alt="AI Hub Homepage" width="800" />
+  </a>
 </p>
 
 ---
@@ -28,32 +40,35 @@
 - **AI Provider Directory** — Browse 100+ AI companies with category/region filtering
 - **News Aggregation** — Auto-fetch from RSS feeds and web scraping with AI keyword filtering
 - **Paper Tracking** — Follow cutting-edge research from arXiv
-- **AI Chat Assistant** — Built-in chat powered by any OpenAI-compatible API, with `@mention` article context
-- **Custom Modules** — Create personalized feeds by binding sources to modules
-- **Favorites** — Bookmark news and papers for later reading
+- **World Affairs** — Aggregate international news from major global media
+- **AI Chat Assistant** — Built-in chat with `@mention` article context
+- **Custom Modules** — Create personalized feed combinations
+- **Favorites** — Bookmark news and papers
 - **Full-text Search** — Search across all content types
-- **Pipeline Control** — Manual or scheduled (every 4h via GitHub Actions) data fetching
+- **Data Pipeline** — Manual or scheduled (every 4h via GitHub Actions) fetching
 - **i18n** — Chinese and English interface
 - **Dark / Light Theme** — Automatic theme switching
 
-## Demo
+<details>
+<summary>More Screenshots</summary>
 
-**Live:** [ai-hub-zeta-ten.vercel.app](https://ai-hub-zeta-ten.vercel.app)
+| News | Settings |
+|------|----------|
+| ![News](docs/screenshots/news.png) | Pipeline control, module management, data sources, LLM config |
 
-<!-- Add screenshots here -->
-<!-- ![Home](docs/screenshots/home.png) -->
+</details>
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | [Next.js 16](https://nextjs.org/) (App Router, Turbopack) |
+| Framework | Next.js 16 (App Router, Turbopack) |
 | Language | TypeScript 5 |
-| UI | React 19, Tailwind CSS 4 |
+| UI | React 19 + Tailwind CSS 4 |
 | Database | SQLite (local) / Supabase (cloud) |
-| Data Pipeline | RSS Parser, Cheerio, arXiv API |
+| Data Pipeline | RSS Parser + Cheerio + arXiv API |
 | AI Chat | OpenAI-compatible API (OpenRouter, DeepSeek, etc.) |
-| Scheduling | GitHub Actions (auto-fetch every 4h) |
+| Scheduling | GitHub Actions (every 4h) |
 | Deployment | Vercel |
 
 ## Getting Started
@@ -66,25 +81,18 @@
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/LearningByDoingNow/ai-hub.git
 cd ai-hub
-
-# Install dependencies
 npm install
-
-# Initialize the database (SQLite, zero-config)
-node scripts/seed-sqlite.mjs
-
-# Start the dev server
-npm run dev
+node scripts/seed-sqlite.mjs   # Initialize database
+npm run dev                     # Start dev server
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Environment Variables
 
-Create a `.env.local` file in the root directory:
+Create a `.env.local` file:
 
 ```env
 # LLM Configuration (required for AI chat)
@@ -98,22 +106,15 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-> **Note:** SQLite works out of the box for local development. Supabase is only needed for cloud deployment (e.g., Vercel).
+> **Note:** SQLite works out of the box locally. Supabase is only needed for cloud deployment (e.g., Vercel).
 
 ### Data Fetching
 
 ```bash
-# Fetch news from all enabled sources
-npm run fetch
-
-# Fetch papers from arXiv
-npm run fetch:papers
-
-# Fetch everything
-npm run fetch:all
-
-# Run scheduled fetching (every 4 hours)
-npm run fetch:schedule
+npm run fetch          # Fetch news
+npm run fetch:papers   # Fetch papers
+npm run fetch:all      # Fetch everything
+npm run fetch:schedule # Scheduled fetching (every 4h)
 ```
 
 ## Deployment
@@ -122,20 +123,16 @@ npm run fetch:schedule
 
 1. Push to GitHub
 2. Import the repo on [vercel.com](https://vercel.com)
-3. Add environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+3. Add env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 4. Deploy
 
 > The app automatically uses Supabase when SQLite is not available (serverless environments).
 
 ### Supabase Setup
 
-1. Create a new project on [supabase.com](https://supabase.com)
-2. Run `scripts/create-tables.sql` in the SQL editor to create the schema
-3. Add your Supabase credentials to `.env.local` or Vercel environment variables
-
-### GitHub Actions
-
-The workflow in `.github/workflows/fetch.yml` runs every 4 hours to fetch new data and auto-commits to the repo. No additional configuration needed.
+1. Create a project on [supabase.com](https://supabase.com)
+2. Run `scripts/create-tables.sql` in the SQL editor
+3. Add Supabase credentials to environment variables
 
 ## Architecture
 
@@ -143,25 +140,19 @@ The workflow in `.github/workflows/fetch.yml` runs every 4 hours to fetch new da
 src/
 ├── app/                  # Pages & API routes (Next.js App Router)
 │   ├── api/              # RESTful API endpoints
-│   ├── news/             # News listing page
-│   ├── papers/           # Papers listing page
-│   ├── providers/        # AI companies directory
+│   ├── news/             # News listing
+│   ├── papers/           # Papers listing
+│   ├── providers/        # AI provider directory
 │   ├── favorites/        # Bookmarked items
 │   ├── feed/[id]/        # Custom module feeds
 │   └── settings/         # Configuration dashboard
-├── components/           # Reusable React components
-│   ├── ChatWidget.tsx    # AI chat with streaming & @mentions
-│   └── settings/         # Settings panel components
-├── lib/                  # Core logic
-│   ├── db.ts             # Database abstraction (SQLite + Supabase)
-│   ├── sqlite.ts         # SQLite operations
-│   ├── queries.ts        # Server-side data queries
-│   └── supabase/         # Supabase client setup
+├── components/           # React components
+├── lib/                  # Core logic (database, queries)
 ├── i18n/                 # Internationalization (zh/en)
 └── types/                # TypeScript interfaces
 
 scripts/
-├── engine.mjs            # News fetching engine (RSS + scraping)
+├── engine.mjs            # News fetching engine
 ├── fetch-papers.mjs      # arXiv paper fetcher
 ├── fetchers/             # Modular fetch strategies
 └── create-tables.sql     # Database schema
@@ -179,7 +170,7 @@ RSS Feeds / Web / arXiv
   SQLite (local) ──sync──▶ Supabase (cloud)
         │                        │
         ▼                        ▼
-  Next.js Dev Server      Vercel Production
+  Dev Server              Vercel Production
 ```
 
 ## Available Scripts
@@ -192,8 +183,8 @@ RSS Feeds / Web / arXiv
 | `npm run lint` | Run ESLint |
 | `npm run fetch` | Fetch news once |
 | `npm run fetch:papers` | Fetch papers once |
-| `npm run fetch:all` | Fetch news + papers |
-| `npm run fetch:schedule` | Start scheduled fetching (every 4h) |
+| `npm run fetch:all` | Fetch everything |
+| `npm run fetch:schedule` | Scheduled fetching (every 4h) |
 
 ## Contributing
 
@@ -205,4 +196,4 @@ RSS Feeds / Web / arXiv
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT License](LICENSE)

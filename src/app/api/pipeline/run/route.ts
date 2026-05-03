@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execFile } from "child_process";
 import path from "path";
+import { existsSync } from "fs";
 
 export async function POST(req: NextRequest) {
-  if (!process.env.ENABLE_PIPELINE) {
+  const sqliteExists = existsSync(path.join(process.cwd(), "data", "ai-hub.db"));
+  if (!sqliteExists) {
     return NextResponse.json(
       { ok: false, error: "Pipeline is not available in serverless environment. Run locally with: npm run fetch:all" },
       { status: 503 }
