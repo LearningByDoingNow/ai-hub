@@ -64,28 +64,24 @@ const PROVIDER_PRESETS = {
   },
 };
 
-function getLLMConfig() {
-  const db = new Database(dbPath);
-  db.pragma("journal_mode = WAL");
-  const row = db.prepare("SELECT value FROM pipeline_config WHERE key = 'llm'").get();
-  db.close();
-  const config = row ? JSON.parse(row.value) : {};
-
-  // API Key: env var takes priority, then .env.local, never from database
-  const apiKey = process.env.LLM_API_KEY || readEnvFile("LLM_API_KEY") || "";
-  return { ...config, apiKey };
-}
-
 function readEnvFile(key) {
   try {
     const envPath = join(dirname(dbPath), "..", ".env.local");
     const content = readFileSync(envPath, "utf-8");
     for (const line of content.split("\n")) {
-      const [k, ...v] = line.split("=");
-      if (k && k.trim() === key) return v.join("=").trim();
+      const idx = line.indexOf("=");
+      if (idx > 0 && line.slice(0, idx).trim() === key) return line.slice(idx + 1).trim();
     }
   } catch { /* no .env.local */ }
   return "";
+}
+
+function getLLMConfig() {
+  const apiKey = process.env.LLM_API_KEY || readEnvFile("LLM_API_KEY") || "";
+  const baseUrl = process.env.LLM_BASE_URL || readEnvFile("LLM_BASE_URL") || "";
+  const model = process.env.LLM_MODEL || readEnvFile("LLM_MODEL") || "";
+  const format = baseUrl.includes("anthropic.com") ? "anthropic" : "openai";
+  return { apiKey, baseUrl, model, format };
 }
 
 async function callOpenAIFormat(baseUrl, apiKey, model, systemPrompt, userPrompt) {
