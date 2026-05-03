@@ -3,16 +3,25 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocale } from "@/i18n/context";
 
-const PRESETS = [
-  { name: "OpenAI", baseUrl: "https://api.openai.com/v1", model: "gpt-4o-mini" },
-  { name: "Anthropic", baseUrl: "https://api.anthropic.com", model: "claude-sonnet-4-6" },
-  { name: "DeepSeek", baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat" },
-  { name: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1", model: "deepseek/deepseek-chat-v3-0324:free" },
-  { name: "Groq", baseUrl: "https://api.groq.com/openai/v1", model: "llama-3.3-70b-versatile" },
-  { name: "Together AI", baseUrl: "https://api.together.xyz/v1", model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
-  { name: "SiliconFlow", baseUrl: "https://api.siliconflow.cn/v1", model: "deepseek-ai/DeepSeek-V3" },
-  { name: "Xiaomi MiMo", baseUrl: "https://api.xiaomimimo.com/v1", model: "mimo-v2.5-pro" },
+interface Preset {
+  name: string;
+  baseUrl: string;
+  model: string;
+  builtin?: boolean;
+}
+
+const BUILTIN_PRESETS: Preset[] = [
+  { name: "OpenAI", baseUrl: "https://api.openai.com/v1", model: "gpt-4o-mini", builtin: true },
+  { name: "Anthropic", baseUrl: "https://api.anthropic.com", model: "claude-sonnet-4-6", builtin: true },
+  { name: "DeepSeek", baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat", builtin: true },
+  { name: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1", model: "deepseek/deepseek-chat-v3-0324:free", builtin: true },
+  { name: "Groq", baseUrl: "https://api.groq.com/openai/v1", model: "llama-3.3-70b-versatile", builtin: true },
+  { name: "Together AI", baseUrl: "https://api.together.xyz/v1", model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", builtin: true },
+  { name: "SiliconFlow", baseUrl: "https://api.siliconflow.cn/v1", model: "deepseek-ai/DeepSeek-V3", builtin: true },
+  { name: "Xiaomi MiMo", baseUrl: "https://api.xiaomimimo.com/v1", model: "mimo-v2.5-pro", builtin: true },
 ];
+
+const CUSTOM_PRESETS_KEY = "ai-hub-llm-presets";
 
 export default function LLMConfig() {
   const { locale } = useLocale();
@@ -22,6 +31,35 @@ export default function LLMConfig() {
   const [temperature, setTemperature] = useState("0.5");
   const [reasoningEffort, setReasoningEffort] = useState("default");
   const [saving, setSaving] = useState(false);
+
+  // Custom presets
+  const [customPresets, setCustomPresets] = useState<Preset[]>([]);
+  const [showAddPreset, setShowAddPreset] = useState(false);
+  const [newPreset, setNewPreset] = useState({ name: "", baseUrl: "", model: "" });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CUSTOM_PRESETS_KEY);
+      if (saved) setCustomPresets(JSON.parse(saved));
+    } catch { /* */ }
+  }, []);
+
+  function saveCustomPreset() {
+    if (!newPreset.name || !newPreset.baseUrl) return;
+    const updated = [...customPresets, newPreset];
+    setCustomPresets(updated);
+    localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(updated));
+    setNewPreset({ name: "", baseUrl: "", model: "" });
+    setShowAddPreset(false);
+  }
+
+  function deleteCustomPreset(name: string) {
+    const updated = customPresets.filter((p) => p.name !== name);
+    setCustomPresets(updated);
+    localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(updated));
+  }
+
+  const allPresets = [...BUILTIN_PRESETS, ...customPresets];
   const [saved, setSaved] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -89,20 +127,55 @@ export default function LLMConfig() {
           {locale === "zh" ? "快速选择" : "Quick Select"}
         </h3>
         <div className="flex flex-wrap gap-2">
-          {PRESETS.map((p) => (
-            <button
-              key={p.name}
-              onClick={() => applyPreset(p)}
-              className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
-                baseUrl === p.baseUrl
-                  ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/30 dark:text-blue-300"
-                  : "border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400"
-              }`}
-            >
-              {p.name}
-            </button>
+          {allPresets.map((p) => (
+            <div key={p.name} className="relative group">
+              <button
+                onClick={() => applyPreset(p)}
+                className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                  baseUrl === p.baseUrl
+                    ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/30 dark:text-blue-300"
+                    : "border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400"
+                }`}
+              >
+                {p.name}
+              </button>
+              {!p.builtin && (
+                <button
+                  onClick={() => deleteCustomPreset(p.name)}
+                  className="absolute -top-1.5 -right-1.5 hidden group-hover:flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-white text-xs"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           ))}
+          <button
+            onClick={() => setShowAddPreset(!showAddPreset)}
+            className="rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-sm text-slate-400 hover:border-blue-400 hover:text-blue-500 dark:border-slate-600"
+          >
+            + {locale === "zh" ? "添加模板" : "Add Template"}
+          </button>
         </div>
+
+        {showAddPreset && (
+          <div className="mt-3 grid gap-2 sm:grid-cols-3 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950/30">
+            <input placeholder={locale === "zh" ? "名称" : "Name"} value={newPreset.name}
+              onChange={(e) => setNewPreset({ ...newPreset, name: e.target.value })}
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
+            <input placeholder="Base URL" value={newPreset.baseUrl}
+              onChange={(e) => setNewPreset({ ...newPreset, baseUrl: e.target.value })}
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
+            <div className="flex gap-2">
+              <input placeholder={locale === "zh" ? "默认模型" : "Default model"} value={newPreset.model}
+                onChange={(e) => setNewPreset({ ...newPreset, model: e.target.value })}
+                className="flex-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
+              <button onClick={saveCustomPreset} disabled={!newPreset.name || !newPreset.baseUrl}
+                className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50">
+                {locale === "zh" ? "添加" : "Add"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Config Form */}
