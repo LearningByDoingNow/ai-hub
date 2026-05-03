@@ -3,6 +3,13 @@ import { execFile } from "child_process";
 import path from "path";
 
 export async function POST(req: NextRequest) {
+  if (!process.env.ENABLE_PIPELINE) {
+    return NextResponse.json(
+      { ok: false, error: "Pipeline is not available in serverless environment. Run locally with: npm run fetch:all" },
+      { status: 503 }
+    );
+  }
+
   const { task } = await req.json();
 
   const scripts: Record<string, string> = {

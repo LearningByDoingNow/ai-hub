@@ -1,21 +1,50 @@
 import { NextResponse } from "next/server";
-import * as sqlite from "@/lib/sqlite";
+import { existsSync } from "fs";
+import path from "path";
+
+const sqliteExists = existsSync(path.join(process.cwd(), "data", "ai-hub.db"));
+const useSupabase =
+  !sqliteExists &&
+  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export async function GET() {
-  const db = (sqlite as unknown as { getDb?: () => unknown }).getDb
-    ? undefined
-    : undefined;
+  if (useSupabase) {
+    const { createServerSupabase } = await import("@/lib/supabase/server");
+    const supabase = await createServerSupabase();
 
-  // Direct SQLite query for pipeline runs
+    const [newsCount, papersCount, sourcesCount, recentNews] =
+      await Promise.all([
+        supabase.from("news").select("*", { count: "exact", head: true }),
+        supabase.from("papers").select("*", { count: "exact", head: true }),
+        supabase
+          .from("sources")
+          .select("*", { count: "exact", head: true })
+          .eq("enabled", true),
+        supabase
+          .from("news")
+          .select("id, title, source, date, created_at")
+          .order("created_at", { ascending: false })
+          .limit(15),
+      ]);
+
+    return NextResponse.json({
+      runs: [],
+      recentNews: recentNews.data || [],
+      stats: {
+        news: newsCount.count || 0,
+        papers: papersCount.count || 0,
+        sources: sourcesCount.count || 0,
+      },
+    });
+  }
+
   const Database = (await import("better-sqlite3")).default;
-  const path = await import("path");
   const dbPath = path.join(process.cwd(), "data", "ai-hub.db");
   const sdb = new Database(dbPath);
 
   const runs = sdb
-    .prepare(
-      "SELECT * FROM pipeline_runs ORDER BY started_at DESC LIMIT 20"
-    )
+    .prepare("SELECT * FROM pipeline_runs ORDER BY started_at DESC LIMIT 20")
     .all();
 
   const recentNews = sdb
