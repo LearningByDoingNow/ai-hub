@@ -1,6 +1,6 @@
 "use client";
 
-import { categories } from "@/data/providers";
+import { categories } from "@/lib/constants";
 import { useLocale } from "@/i18n/context";
 
 export default function CategoryFilter({

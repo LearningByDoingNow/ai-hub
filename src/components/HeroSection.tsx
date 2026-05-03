@@ -2,17 +2,20 @@
 
 import Link from "next/link";
 import { useLocale } from "@/i18n/context";
-import { providers } from "@/data/providers";
-import { newsItems } from "@/data/news";
-import { papers } from "@/data/papers";
 
-export default function HeroSection() {
+interface HeroProps {
+  providerCount: number;
+  newsCount: number;
+  paperCount: number;
+}
+
+export default function HeroSection({ providerCount, newsCount, paperCount }: HeroProps) {
   const { t } = useLocale();
 
   const stats = [
-    { value: providers.length, label: t("hero.providers"), color: "from-blue-500 to-blue-600" },
-    { value: newsItems.length, label: t("hero.news"), color: "from-emerald-500 to-emerald-600" },
-    { value: papers.length, label: t("hero.papers"), color: "from-violet-500 to-violet-600" },
+    { value: providerCount, label: t("hero.providers"), color: "from-blue-500 to-blue-600" },
+    { value: newsCount, label: t("hero.news"), color: "from-emerald-500 to-emerald-600" },
+    { value: paperCount, label: t("hero.papers"), color: "from-violet-500 to-violet-600" },
   ];
 
   return (
