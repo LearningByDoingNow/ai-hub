@@ -31,7 +31,7 @@ export default function SettingsPage() {
           : "Pipeline, modules, data sources, providers, and LLM configuration"}
       </p>
 
-      <div className="flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700 mb-6">
+      <div className="flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700 mb-6 scrollbar-none" style={{ scrollbarWidth: "none" }}>
         {tabs.map((tab) => (
           <button
             key={tab.key}
