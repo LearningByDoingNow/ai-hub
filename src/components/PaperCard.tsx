@@ -8,7 +8,7 @@ export default function PaperCard({ paper }: { paper: Paper }) {
   const abstract = locale === "en" ? paper.abstractEn : paper.abstract;
 
   return (
-    <div className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-slate-600">
+    <div className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-violet-200 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-violet-700">
       <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mb-2">
         <span className="font-medium text-violet-600 dark:text-violet-400">
           {paper.venue}
@@ -25,50 +25,35 @@ export default function PaperCard({ paper }: { paper: Paper }) {
         {paper.authors.join(", ")}
       </p>
 
-      <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 line-clamp-3 leading-relaxed">
-        <span className="font-medium text-slate-600 dark:text-slate-300">
-          {t("papers.abstract")}:
-        </span>{" "}
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-3 leading-relaxed">
         {abstract}
       </p>
 
-      <div className="flex items-center justify-between">
-        <div className="flex flex-wrap gap-1.5">
-          {paper.tags.map((tag) => (
-            <span
-              key={tag}
-              className="inline-block rounded-full bg-violet-50 px-2.5 py-0.5 text-xs text-violet-600 dark:bg-violet-900/20 dark:text-violet-300"
+      <div className="flex gap-2">
+        {paper.links.map((link) => (
+          <a
+            key={link.label}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+          >
+            {link.label}
+            <svg
+              className="h-2.5 w-2.5 opacity-50"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
             >
-              {tag}
-            </span>
-          ))}
-        </div>
-        <div className="flex gap-2 shrink-0">
-          {paper.links.map((link) => (
-            <a
-              key={link.label}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
-            >
-              {link.label}
-              <svg
-                className="h-2.5 w-2.5 opacity-50"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
-                />
-              </svg>
-            </a>
-          ))}
-        </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
+              />
+            </svg>
+          </a>
+        ))}
       </div>
     </div>
   );

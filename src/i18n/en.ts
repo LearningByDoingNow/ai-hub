@@ -27,6 +27,8 @@ export const en: Record<string, string> = {
   "cat.AI 音频": "AI Audio",
   "cat.AI 搜索": "AI Search",
   "cat.AI 基础设施": "AI Infra",
+  "cat.AI Agent": "AI Agent",
+  "cat.AI 机器人": "AI Robotics",
 
   // Search
   "search.placeholder": "Search AI providers, models, tools...",

@@ -22,6 +22,8 @@ export const categories = [
   "AI 音频",
   "AI 搜索",
   "AI 基础设施",
+  "AI Agent",
+  "AI 机器人",
 ] as const;
 
 export const providers: Provider[] = [
@@ -38,12 +40,12 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://platform.openai.com" },
       { label: "文档", url: "https://platform.openai.com/docs" },
     ],
-    tags: ["GPT-4o", "GPT-4", "o1", "o3", "DALL·E", "Sora"],
+    tags: ["GPT-5.5", "GPT-5.4", "Codex", "DALL·E", "Sora"],
   },
   {
     id: "anthropic",
     name: "Anthropic",
-    description: "Claude 系列大模型",
+    description: "Claude 系列大模型与 AI 安全研究",
     category: "大模型",
     country: "国外",
     links: [
@@ -52,7 +54,7 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://console.anthropic.com" },
       { label: "文档", url: "https://docs.anthropic.com" },
     ],
-    tags: ["Claude Opus", "Claude Sonnet", "Claude Haiku"],
+    tags: ["Claude Opus 4.7", "Claude Sonnet 4.6", "Claude Haiku 4.5"],
   },
   {
     id: "google",
@@ -66,7 +68,7 @@ export const providers: Provider[] = [
       { label: "AI Studio", url: "https://aistudio.google.com" },
       { label: "文档", url: "https://ai.google.dev/docs" },
     ],
-    tags: ["Gemini 2.5", "Gemma", "Veo", "Imagen"],
+    tags: ["Gemini 3.1 Pro", "Gemini 3 Flash", "Gemma", "Veo"],
   },
   {
     id: "meta",
@@ -80,12 +82,12 @@ export const providers: Provider[] = [
       { label: "LLaMA", url: "https://llama.meta.com" },
       { label: "文档", url: "https://llama.meta.com/docs" },
     ],
-    tags: ["LLaMA 4", "LLaMA 3", "开源"],
+    tags: ["LLaMA 4 Scout", "LLaMA 4 Maverick", "开源"],
   },
   {
     id: "mistral",
     name: "Mistral AI",
-    description: "欧洲领先的开源大模型公司",
+    description: "欧洲领先的大模型公司，融资 $2.9B",
     category: "大模型",
     country: "国外",
     links: [
@@ -94,7 +96,7 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://console.mistral.ai" },
       { label: "文档", url: "https://docs.mistral.ai" },
     ],
-    tags: ["Mistral Large", "Mixtral", "开源"],
+    tags: ["Mistral Large 3", "Mixtral", "开源"],
   },
   {
     id: "xai",
@@ -108,7 +110,7 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://console.x.ai" },
       { label: "文档", url: "https://docs.x.ai" },
     ],
-    tags: ["Grok-3", "Grok-2"],
+    tags: ["Grok 4.3", "Grok 4.20", "100万上下文"],
   },
   {
     id: "microsoft",
@@ -122,7 +124,7 @@ export const providers: Provider[] = [
       { label: "Azure AI Studio", url: "https://ai.azure.com" },
       { label: "文档", url: "https://learn.microsoft.com/en-us/azure/ai-services" },
     ],
-    tags: ["Copilot", "Azure OpenAI", "Phi"],
+    tags: ["Copilot", "Azure OpenAI", "Phi-4"],
   },
   {
     id: "github-copilot",
@@ -134,19 +136,43 @@ export const providers: Provider[] = [
       { label: "官网", url: "https://github.com/features/copilot" },
       { label: "文档", url: "https://docs.github.com/en/copilot" },
     ],
-    tags: ["代码补全", "编程助手"],
+    tags: ["代码补全", "编程助手", "Agent"],
   },
   {
     id: "cursor",
     name: "Cursor",
-    description: "AI 驱动的代码编辑器",
+    description: "AI 驱动的代码编辑器，月活突破千万",
     category: "AI 编程",
     country: "国外",
     links: [
       { label: "官网", url: "https://cursor.com" },
       { label: "文档", url: "https://docs.cursor.com" },
     ],
-    tags: ["IDE", "代码编辑"],
+    tags: ["IDE", "代码编辑", "Agent"],
+  },
+  {
+    id: "claude-code",
+    name: "Claude Code",
+    description: "Anthropic 的终端 AI 编程工具",
+    category: "AI 编程",
+    country: "国外",
+    links: [
+      { label: "官网", url: "https://docs.anthropic.com/en/docs/claude-code" },
+      { label: "GitHub", url: "https://github.com/anthropics/claude-code" },
+    ],
+    tags: ["CLI", "终端", "Agentic Coding"],
+  },
+  {
+    id: "windsurf",
+    name: "Windsurf",
+    description: "AI 编程 IDE（原 Codeium）",
+    category: "AI 编程",
+    country: "国外",
+    links: [
+      { label: "官网", url: "https://windsurf.com" },
+      { label: "文档", url: "https://docs.windsurf.com" },
+    ],
+    tags: ["IDE", "Cascade", "Agent"],
   },
   {
     id: "midjourney",
@@ -158,7 +184,7 @@ export const providers: Provider[] = [
       { label: "官网", url: "https://www.midjourney.com" },
       { label: "文档", url: "https://docs.midjourney.com" },
     ],
-    tags: ["图像生成", "艺术创作"],
+    tags: ["V6", "图像生成", "艺术创作"],
   },
   {
     id: "stability",
@@ -171,7 +197,18 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://platform.stability.ai" },
       { label: "文档", url: "https://platform.stability.ai/docs" },
     ],
-    tags: ["Stable Diffusion", "SDXL", "开源"],
+    tags: ["Stable Diffusion 3", "SDXL", "开源"],
+  },
+  {
+    id: "blackforestlabs",
+    name: "Black Forest Labs",
+    description: "FLUX 图像生成模型，估值 $3.25B",
+    category: "AI 绘画",
+    country: "国外",
+    links: [
+      { label: "官网", url: "https://blackforestlabs.ai" },
+    ],
+    tags: ["FLUX", "图像生成", "开源"],
   },
   {
     id: "runway",
@@ -183,7 +220,18 @@ export const providers: Provider[] = [
       { label: "官网", url: "https://runwayml.com" },
       { label: "文档", url: "https://docs.runwayml.com" },
     ],
-    tags: ["Gen-3", "视频生成"],
+    tags: ["Gen-3 Alpha", "视频生成"],
+  },
+  {
+    id: "pika",
+    name: "Pika",
+    description: "AI 视频生成平台",
+    category: "AI 视频",
+    country: "国外",
+    links: [
+      { label: "官网", url: "https://pika.art" },
+    ],
+    tags: ["视频生成", "特效"],
   },
   {
     id: "elevenlabs",
@@ -199,16 +247,27 @@ export const providers: Provider[] = [
     tags: ["语音合成", "语音克隆", "TTS"],
   },
   {
+    id: "suno",
+    name: "Suno",
+    description: "AI 音乐生成",
+    category: "AI 音频",
+    country: "国外",
+    links: [
+      { label: "官网", url: "https://suno.com" },
+    ],
+    tags: ["音乐生成", "歌曲创作"],
+  },
+  {
     id: "perplexity",
     name: "Perplexity",
-    description: "AI 搜索引擎",
+    description: "AI 搜索引擎，ARR 超 $330M",
     category: "AI 搜索",
     country: "国外",
     links: [
       { label: "官网", url: "https://www.perplexity.ai" },
       { label: "开放平台", url: "https://docs.perplexity.ai" },
     ],
-    tags: ["AI 搜索", "问答"],
+    tags: ["AI 搜索", "问答", "Sonar"],
   },
   {
     id: "huggingface",
@@ -235,6 +294,40 @@ export const providers: Provider[] = [
     ],
     tags: ["模型托管", "API"],
   },
+  {
+    id: "openrouter",
+    name: "OpenRouter",
+    description: "统一 API 访问多家 LLM 模型",
+    category: "AI 基础设施",
+    country: "国外",
+    links: [
+      { label: "官网", url: "https://openrouter.ai" },
+      { label: "文档", url: "https://openrouter.ai/docs" },
+    ],
+    tags: ["API 聚合", "模型路由"],
+  },
+  {
+    id: "skild",
+    name: "Skild AI",
+    description: "通用机器人基础模型，估值 $14B",
+    category: "AI 机器人",
+    country: "国外",
+    links: [
+      { label: "官网", url: "https://www.skild.ai" },
+    ],
+    tags: ["机器人", "基础模型", "具身智能"],
+  },
+  {
+    id: "wayve",
+    name: "Wayve",
+    description: "自动驾驶具身 AI，融资 $1.2B",
+    category: "AI 机器人",
+    country: "国外",
+    links: [
+      { label: "官网", url: "https://wayve.ai" },
+    ],
+    tags: ["自动驾驶", "具身 AI"],
+  },
 
   // ===== 国内 =====
   {
@@ -249,12 +342,12 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://platform.deepseek.com" },
       { label: "文档", url: "https://api-docs.deepseek.com" },
     ],
-    tags: ["DeepSeek-R1", "DeepSeek-V3", "开源"],
+    tags: ["DeepSeek-V4-Pro", "DeepSeek-V4-Flash", "100万上下文", "开源"],
   },
   {
     id: "zhipu",
     name: "智谱 AI",
-    description: "GLM 系列大模型，ChatGLM 对话助手",
+    description: "GLM 系列大模型，智谱清言对话助手",
     category: "大模型",
     country: "国内",
     links: [
@@ -263,7 +356,7 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://open.bigmodel.cn" },
       { label: "文档", url: "https://open.bigmodel.cn/dev/api" },
     ],
-    tags: ["GLM-4", "ChatGLM", "CogView"],
+    tags: ["GLM-5", "Agent 模型", "视觉编程"],
   },
   {
     id: "baidu",
@@ -276,12 +369,12 @@ export const providers: Provider[] = [
       { label: "千帆平台", url: "https://qianfan.cloud.baidu.com" },
       { label: "文档", url: "https://cloud.baidu.com/doc/WENXINWORKSHOP" },
     ],
-    tags: ["文心 4.0", "ERNIE"],
+    tags: ["文心 5.0", "ERNIE"],
   },
   {
     id: "alibaba",
     name: "阿里通义",
-    description: "通义千问大模型系列",
+    description: "通义千问 Qwen 大模型系列",
     category: "大模型",
     country: "国内",
     links: [
@@ -290,12 +383,12 @@ export const providers: Provider[] = [
       { label: "百炼平台", url: "https://bailian.console.aliyun.com" },
       { label: "文档", url: "https://help.aliyun.com/zh/model-studio" },
     ],
-    tags: ["Qwen", "通义万相", "开源"],
+    tags: ["Qwen3", "119种语言", "开源"],
   },
   {
     id: "moonshot",
     name: "月之暗面 Moonshot",
-    description: "Kimi 智能助手",
+    description: "Kimi 智能助手，估值突破 $100亿",
     category: "AI 助手",
     country: "国内",
     links: [
@@ -303,12 +396,12 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://platform.moonshot.cn" },
       { label: "文档", url: "https://platform.moonshot.cn/docs" },
     ],
-    tags: ["Kimi", "长上下文"],
+    tags: ["Kimi K2.5", "Kimi Claw", "长上下文"],
   },
   {
     id: "minimax",
     name: "MiniMax",
-    description: "海螺 AI 助手，多模态大模型",
+    description: "海螺 AI，Agent 原生设计模型",
     category: "大模型",
     country: "国内",
     links: [
@@ -317,7 +410,7 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://platform.minimaxi.com" },
       { label: "文档", url: "https://platform.minimaxi.com/document" },
     ],
-    tags: ["海螺", "视频生成", "语音"],
+    tags: ["M2.5", "Agent", "视频生成"],
   },
   {
     id: "baichuan",
@@ -345,7 +438,7 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://platform.stepfun.com" },
       { label: "文档", url: "https://platform.stepfun.com/docs" },
     ],
-    tags: ["Step-2", "跃问"],
+    tags: ["Step-3", "跃问"],
   },
   {
     id: "doubao",
@@ -358,12 +451,12 @@ export const providers: Provider[] = [
       { label: "火山引擎", url: "https://www.volcengine.com/product/doubao" },
       { label: "文档", url: "https://www.volcengine.com/docs/82379" },
     ],
-    tags: ["豆包", "火山引擎"],
+    tags: ["豆包", "火山引擎", "Seed"],
   },
   {
     id: "iflytek",
     name: "科大讯飞",
-    description: "讯飞星火大模型",
+    description: "讯飞星火大模型，全国产算力",
     category: "大模型",
     country: "国内",
     links: [
@@ -372,7 +465,7 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://www.xfyun.cn" },
       { label: "文档", url: "https://www.xfyun.cn/doc" },
     ],
-    tags: ["星火", "语音识别"],
+    tags: ["星火 X2", "语音识别", "国产算力"],
   },
   {
     id: "sensetime",
@@ -386,7 +479,7 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://platform.sensenova.cn" },
       { label: "文档", url: "https://platform.sensenova.cn/doc" },
     ],
-    tags: ["日日新", "商量", "SenseNova"],
+    tags: ["日日新 5.5", "商量", "SenseNova"],
   },
   {
     id: "01ai",
@@ -400,6 +493,28 @@ export const providers: Provider[] = [
       { label: "开放平台", url: "https://platform.01.ai" },
       { label: "文档", url: "https://platform.01.ai/docs" },
     ],
-    tags: ["Yi", "开源"],
+    tags: ["Yi-Lightning", "开源"],
+  },
+  {
+    id: "zhihu-zhihai",
+    name: "知乎直答",
+    description: "知乎 AI 搜索与问答",
+    category: "AI 搜索",
+    country: "国内",
+    links: [
+      { label: "知乎直答", url: "https://zhida.zhihu.com" },
+    ],
+    tags: ["AI 搜索", "知识问答"],
+  },
+  {
+    id: "tiangong",
+    name: "天工 AI",
+    description: "昆仑万维旗下 AI 搜索与助手",
+    category: "AI 搜索",
+    country: "国内",
+    links: [
+      { label: "天工", url: "https://www.tiangong.cn" },
+    ],
+    tags: ["AI 搜索", "天工大模型"],
   },
 ];
