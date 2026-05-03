@@ -1,18 +1,16 @@
-import Parser from "rss-parser";
+/**
+ * AI Hub Fetch Engine v2
+ * Multi-strategy: RSS + Web Scrape + API
+ */
+
 import Database from "better-sqlite3";
 import cron from "node-cron";
-import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { chat, isLLMConfigured, PROVIDER_PRESETS } from "./llm-client.mjs";
+import { fetchSource } from "./fetchers/index.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dbPath = join(__dirname, "../data/ai-hub.db");
-
-const parser = new Parser({
-  timeout: 15000,
-  headers: { "User-Agent": "AI-Hub-Engine/1.0" },
-});
 
 const AI_KEYWORDS = [
   "ai", "artificial intelligence", "machine learning", "deep learning",
@@ -20,22 +18,8 @@ const AI_KEYWORDS = [
   "deepseek", "openai", "anthropic", "chatgpt", "copilot", "agent",
   "neural", "transformer", "diffusion", "generative", "model",
   "reasoning", "multimodal", "fine-tuning", "training", "inference",
-  "人工智能", "大模型", "机器学习", "深度学习",
+  "人工智能", "大模型", "机器学习", "深度学习", "大语言模型",
 ];
-
-function generateId(url) {
-  return "news-" + crypto.createHash("md5").update(url).digest("hex").slice(0, 12);
-}
-
-function stripHtml(html) {
-  if (!html) return "";
-  return html.replace(/<[^>]*>/g, "").replace(/&\w+;/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function truncate(str, maxLen) {
-  if (!str) return "";
-  return str.length > maxLen ? str.slice(0, maxLen) + "..." : str;
-}
 
 function isAIRelated(title, summary) {
   const text = `${title} ${summary}`.toLowerCase();
@@ -52,98 +36,12 @@ function getEnabledSources(db) {
   return db.prepare("SELECT * FROM sources WHERE enabled = 1").all();
 }
 
-// --- LLM Enhancement ---
-
-async function llmAnalyzeNews(title, summary, sourceLang) {
-  const prompt = `You are an AI news analyst. Analyze this article and respond in JSON format only.
-
-Article title: ${title}
-Article summary: ${summary}
-Source language: ${sourceLang}
-
-Respond with this exact JSON structure (no markdown, no code blocks):
-{
-  "relevant": true/false,
-  "quality": "high"/"medium"/"low",
-  "title_zh": "Chinese title (translate if English, keep if Chinese)",
-  "title_en": "English title (translate if Chinese, keep if English)",
-  "summary_zh": "Chinese summary in 1-2 sentences",
-  "summary_en": "English summary in 1-2 sentences",
-  "new_model": null or {"provider_id": "xxx", "model_name": "xxx"} if a new AI model release is mentioned
-}`;
-
-  const result = await chat("You are a precise JSON-only responder. Never use markdown.", prompt);
-  try {
-    const cleaned = result.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    return JSON.parse(cleaned);
-  } catch {
-    return null;
-  }
-}
-
-async function llmUpdateProviderTags(db, providerUpdate) {
-  if (!providerUpdate || !providerUpdate.provider_id || !providerUpdate.model_name) return;
-
-  const provider = db.prepare("SELECT * FROM providers WHERE id = ?").get(providerUpdate.provider_id);
-  if (!provider) return;
-
-  const tags = JSON.parse(provider.tags);
-  if (!tags.includes(providerUpdate.model_name)) {
-    tags.unshift(providerUpdate.model_name);
-    if (tags.length > 5) tags.pop();
-    db.prepare("UPDATE providers SET tags = ?, updated_at = datetime('now') WHERE id = ?")
-      .run(JSON.stringify(tags), providerUpdate.provider_id);
-    console.log(`    🔗 Updated ${providerUpdate.provider_id} tags: +${providerUpdate.model_name}`);
-  }
-}
-
-// --- Fetch ---
-
-async function fetchSingleSource(source, useLLM) {
-  try {
-    const result = await parser.parseURL(source.url);
-    const items = [];
-
-    for (const item of (result.items || []).slice(0, 20)) {
-      const title = stripHtml(item.title || "");
-      const summary = stripHtml(item.contentSnippet || item.content || item.summary || "");
-      const url = item.link || "";
-      const date = item.isoDate ? item.isoDate.split("T")[0] : new Date().toISOString().split("T")[0];
-
-      if (!title || !url) continue;
-
-      if (useLLM) {
-        // LLM mode: analyze each article
-        items.push({ title, summary, url, date, lang: source.lang, _raw: true });
-      } else {
-        // Keyword mode: simple filter
-        if (!isAIRelated(title, summary)) continue;
-        items.push({
-          id: generateId(url),
-          title,
-          title_en: source.lang === "en" ? title : "",
-          source: source.name,
-          date,
-          summary: truncate(summary, 300),
-          summary_en: source.lang === "en" ? truncate(summary, 300) : "",
-          url,
-        });
-      }
-    }
-    return { source: source.name, items, error: null };
-  } catch (err) {
-    return { source: source.name, items: [], error: err.message };
-  }
-}
-
 async function runFetch() {
   const db = getDb();
   const sources = getEnabledSources(db);
-  const useLLM = isLLMConfigured();
   const timestamp = new Date().toLocaleString();
 
   console.log(`\n[${timestamp}] Fetching from ${sources.length} sources...`);
-  console.log(`  LLM mode: ${useLLM ? "ON ✨" : "OFF (keyword filter)"}`);
 
   const insertNews = db.prepare(
     "INSERT OR IGNORE INTO news (id, title, title_en, source, date, summary, summary_en, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
@@ -151,79 +49,41 @@ async function runFetch() {
 
   let totalNew = 0;
   let totalErrors = 0;
-  let llmCalls = 0;
 
   for (const source of sources) {
-    const result = await fetchSingleSource(source, useLLM);
+    const result = await fetchSource(source);
+
     if (result.error) {
-      console.log(`  ✗ ${result.source}: ${result.error}`);
+      console.log(`  ✗ ${result.source} [${source.type || "rss"}]: ${result.error}`);
       totalErrors++;
       continue;
     }
 
-    if (useLLM && result.items.length > 0) {
-      // LLM-enhanced processing
+    // Filter AI-related (skip for scrape type — user explicitly added the source)
+    const filtered = source.type === "scrape"
+      ? result.items
+      : result.items.filter((item) => isAIRelated(item.title, item.summary));
+
+    const insertMany = db.transaction((items) => {
       let added = 0;
-      for (const raw of result.items) {
-        try {
-          const analysis = await llmAnalyzeNews(raw.title, raw.summary, raw.lang);
-          llmCalls++;
-          if (!analysis || !analysis.relevant || analysis.quality === "low") continue;
-
-          const r = insertNews.run(
-            generateId(raw.url),
-            analysis.title_zh || raw.title,
-            analysis.title_en || "",
-            source.name,
-            raw.date,
-            analysis.summary_zh || truncate(raw.summary, 300),
-            analysis.summary_en || "",
-            raw.url
-          );
-          if (r.changes > 0) {
-            added++;
-            // Cross-module: update provider tags if new model detected
-            if (analysis.new_model) {
-              await llmUpdateProviderTags(db, analysis.new_model);
-            }
-          }
-        } catch (e) {
-          // LLM call failed, fall back to keyword mode for this item
-          if (isAIRelated(raw.title, raw.summary)) {
-            const r = insertNews.run(
-              generateId(raw.url), raw.title,
-              raw.lang === "en" ? raw.title : "",
-              source.name, raw.date,
-              truncate(raw.summary, 300),
-              raw.lang === "en" ? truncate(raw.summary, 300) : "",
-              raw.url
-            );
-            if (r.changes > 0) added++;
-          }
-        }
+      for (const item of items) {
+        const r = insertNews.run(
+          item.id, item.title, item.title_en, item.source,
+          item.date, item.summary, item.summary_en, item.url
+        );
+        if (r.changes > 0) added++;
       }
-      totalNew += added;
-      console.log(`  ✓ ${result.source}: ${result.items.length} articles, ${added} new (LLM)`);
-    } else {
-      // Keyword mode
-      const insertMany = db.transaction((items) => {
-        let added = 0;
-        for (const item of items) {
-          const r = insertNews.run(item.id, item.title, item.title_en, item.source, item.date, item.summary, item.summary_en, item.url);
-          if (r.changes > 0) added++;
-        }
-        return added;
-      });
+      return added;
+    });
 
-      const added = insertMany(result.items);
-      totalNew += added;
-      console.log(`  ✓ ${result.source}: ${result.items.length} articles, ${added} new`);
-    }
+    const added = insertMany(filtered);
+    totalNew += added;
+    const typeLabel = source.type || "rss";
+    console.log(`  ✓ ${result.source} [${typeLabel}]: ${result.items.length} found, ${filtered.length} relevant, ${added} new`);
   }
 
   const total = db.prepare("SELECT COUNT(*) as count FROM news").get();
-  console.log(`  Done: +${totalNew} new, ${totalErrors} errors, ${total.count} total`);
-  if (useLLM) console.log(`  LLM calls: ${llmCalls}`);
+  console.log(`\n  Done: +${totalNew} new, ${totalErrors} errors, ${total.count} total in DB`);
 
   db.prepare(
     "INSERT INTO pipeline_runs (id, task_type, status, items_processed, completed_at) VALUES (hex(randomblob(16)), 'news', 'success', ?, datetime('now'))"
@@ -238,9 +98,10 @@ const args = process.argv.slice(2);
 const mode = args[0] || "once";
 const intervalHours = parseInt(args[1] || "4", 10);
 
-console.log("AI Hub Fetch Engine");
-console.log("===================");
+console.log("AI Hub Fetch Engine v2");
+console.log("======================");
 console.log(`Mode: ${mode}`);
+console.log(`Strategies: RSS + Web Scrape + API\n`);
 
 if (mode === "once") {
   await runFetch();
@@ -248,15 +109,7 @@ if (mode === "once") {
 } else if (mode === "schedule") {
   console.log(`Schedule: every ${intervalHours} hours`);
   console.log("Press Ctrl+C to stop.\n");
-
   await runFetch();
-
-  cron.schedule(`0 */${intervalHours} * * *`, async () => {
-    await runFetch();
-  });
-
-  process.on("SIGINT", () => {
-    console.log("\nStopping fetch engine...");
-    process.exit(0);
-  });
+  cron.schedule(`0 */${intervalHours} * * *`, async () => { await runFetch(); });
+  process.on("SIGINT", () => { console.log("\nStopping..."); process.exit(0); });
 }
