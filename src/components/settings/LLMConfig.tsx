@@ -11,6 +11,7 @@ const PRESETS = [
   { id: "groq", name: "Groq", baseUrl: "https://api.groq.com/openai/v1", format: "openai", defaultModel: "llama-3.3-70b-versatile" },
   { id: "together", name: "Together AI", baseUrl: "https://api.together.xyz/v1", format: "openai", defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
   { id: "siliconflow", name: "SiliconFlow (硅基流动)", baseUrl: "https://api.siliconflow.cn/v1", format: "openai", defaultModel: "deepseek-ai/DeepSeek-V3" },
+  { id: "mimo", name: "Xiaomi MiMo", baseUrl: "https://api.xiaomimimo.com/v1", format: "openai", defaultModel: "mimo-v2.5-pro" },
   { id: "custom", name: "Custom (自定义)", baseUrl: "", format: "openai", defaultModel: "" },
 ];
 
@@ -25,7 +26,7 @@ interface LLMConfigData {
 export default function LLMConfig() {
   const { locale } = useLocale();
   const [config, setConfig] = useState<LLMConfigData>({
-    provider: "openai", apiKey: "", baseUrl: "", model: "", format: "openai",
+    provider: "openai", apiKey: "", baseUrl: "https://api.openai.com/v1", model: "gpt-4o-mini", format: "openai",
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -35,7 +36,7 @@ export default function LLMConfig() {
   const fetchConfig = useCallback(async () => {
     const res = await fetch("/api/config?key=llm");
     const data = await res.json();
-    if (data.value) setConfig(data.value);
+    if (data.value) setConfig((prev) => ({ ...prev, ...data.value, apiKey: prev.apiKey }));
   }, []);
 
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
