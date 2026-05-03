@@ -33,16 +33,22 @@ export async function GET() {
     baseUrl: env.LLM_BASE_URL || "",
     apiKey: env.LLM_API_KEY ? "***configured***" : "",
     model: env.LLM_MODEL || "",
+    temperature: env.LLM_TEMPERATURE || "0.5",
+    maxTokens: env.LLM_MAX_TOKENS || "2000",
+    reasoningEffort: env.LLM_REASONING_EFFORT || "default",
   });
 }
 
 export async function PUT(req: NextRequest) {
-  const { baseUrl, apiKey, model } = await req.json();
+  const body = await req.json();
   const env = readEnv();
 
-  if (baseUrl !== undefined) env.LLM_BASE_URL = baseUrl;
-  if (apiKey && apiKey !== "***configured***") env.LLM_API_KEY = apiKey;
-  if (model !== undefined) env.LLM_MODEL = model;
+  if (body.baseUrl !== undefined) env.LLM_BASE_URL = body.baseUrl;
+  if (body.apiKey && body.apiKey !== "***configured***") env.LLM_API_KEY = body.apiKey;
+  if (body.model !== undefined) env.LLM_MODEL = body.model;
+  if (body.temperature !== undefined) env.LLM_TEMPERATURE = body.temperature;
+  if (body.maxTokens !== undefined) env.LLM_MAX_TOKENS = body.maxTokens;
+  if (body.reasoningEffort !== undefined) env.LLM_REASONING_EFFORT = body.reasoningEffort;
 
   writeEnv(env);
   return NextResponse.json({ ok: true });

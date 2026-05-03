@@ -19,6 +19,9 @@ export default function LLMConfig() {
   const [baseUrl, setBaseUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("");
+  const [temperature, setTemperature] = useState("0.5");
+  const [maxTokens, setMaxTokens] = useState("2000");
+  const [reasoningEffort, setReasoningEffort] = useState("default");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -30,6 +33,9 @@ export default function LLMConfig() {
     const data = await res.json();
     if (data.baseUrl) setBaseUrl(data.baseUrl);
     if (data.model) setModel(data.model);
+    if (data.temperature) setTemperature(data.temperature);
+    if (data.maxTokens) setMaxTokens(data.maxTokens);
+    if (data.reasoningEffort) setReasoningEffort(data.reasoningEffort);
     setConfigured(!!data.apiKey);
   }, []);
 
@@ -46,7 +52,10 @@ export default function LLMConfig() {
     await fetch("/api/config/env", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ baseUrl, apiKey: apiKey || undefined, model }),
+      body: JSON.stringify({
+        baseUrl, apiKey: apiKey || undefined, model,
+        temperature, maxTokens, reasoningEffort,
+      }),
     });
     setSaving(false);
     setSaved(true);
@@ -133,6 +142,51 @@ export default function LLMConfig() {
               onChange={(e) => { setModel(e.target.value); setSaved(false); }}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
+          </div>
+        </div>
+
+        {/* Inference Parameters */}
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Temperature
+              <span className="ml-1 text-xs text-slate-400">({temperature})</span>
+            </label>
+            <input type="range" min="0" max="2" step="0.1" value={temperature}
+              onChange={(e) => { setTemperature(e.target.value); setSaved(false); }}
+              className="w-full accent-blue-600" />
+            <div className="flex justify-between text-xs text-slate-400 mt-0.5">
+              <span>{locale === "zh" ? "精确" : "Precise"}</span>
+              <span>{locale === "zh" ? "创意" : "Creative"}</span>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Max Tokens
+            </label>
+            <select value={maxTokens} onChange={(e) => { setMaxTokens(e.target.value); setSaved(false); }}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+              <option value="1000">1,000</option>
+              <option value="2000">2,000</option>
+              <option value="4000">4,000</option>
+              <option value="8000">8,000</option>
+              <option value="16000">16,000</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {locale === "zh" ? "推理强度" : "Reasoning Effort"}
+            </label>
+            <select value={reasoningEffort} onChange={(e) => { setReasoningEffort(e.target.value); setSaved(false); }}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+              <option value="default">{locale === "zh" ? "默认" : "Default"}</option>
+              <option value="low">{locale === "zh" ? "低 — 快速回复" : "Low — Fast"}</option>
+              <option value="medium">{locale === "zh" ? "中 — 平衡" : "Medium — Balanced"}</option>
+              <option value="high">{locale === "zh" ? "高 — 深度思考" : "High — Deep thinking"}</option>
+            </select>
+            <p className="text-xs text-slate-400 mt-1">
+              {locale === "zh" ? "支持 DeepSeek/OpenAI o系列/Claude 等" : "For DeepSeek/OpenAI o-series/Claude etc."}
+            </p>
           </div>
         </div>
 
