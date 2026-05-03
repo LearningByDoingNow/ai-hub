@@ -8,7 +8,7 @@ import ViewToggle, { type ViewMode } from "@/components/ViewToggle";
 
 export default function NewsClient({ newsItems }: { newsItems: NewsItem[] }) {
   const { t } = useLocale();
-  const [view, setView] = useState<ViewMode>("grid");
+  const [view, setView] = useState<ViewMode>("list");
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
