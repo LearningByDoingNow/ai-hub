@@ -66,10 +66,10 @@ function fetchArticleContent(url: string): string {
     for (const sel of selectors) {
       const el = $(sel);
       if (el.length && el.text().trim().length > 200) {
-        return el.text().replace(/\s+/g, " ").trim().slice(0, 10000);
+        return el.text().replace(/\s+/g, " ").trim().slice(0, 50000);
       }
     }
-    return $("body").text().replace(/\s+/g, " ").trim().slice(0, 8000);
+    return $("body").text().replace(/\s+/g, " ").trim().slice(0, 30000);
   } catch {
     return "";
   }
