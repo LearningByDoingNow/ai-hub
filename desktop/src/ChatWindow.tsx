@@ -129,13 +129,15 @@ export default function ChatWindow() {
     setLoading(true);
 
     try {
-      // Try streaming via WebUI first
-      const res = await fetch(`${API_BASE}/api/chat`, {
+      // Check if WebUI is available (quick ping)
+      const ping = await fetch(`${API_BASE}/api/pipeline/run`, { signal: AbortSignal.timeout(2000) }).catch(() => null);
+
+      // Try streaming via WebUI if available
+      const res = ping?.ok ? await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessages }),
-        signal: AbortSignal.timeout(5000),
-      }).catch(() => null);
+      }).catch(() => null) : null;
 
       if (res && res.ok) {
         const reader = res.body?.getReader();
