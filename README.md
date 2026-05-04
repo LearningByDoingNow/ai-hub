@@ -105,19 +105,19 @@ A native floating widget that lives on your desktop — always accessible, never
 </td>
 <td width="50%">
 <strong>Expanded Card List</strong><br/>
-<img src="docs/screenshots/desktop-app-list.png" alt="Desktop List" width="100%" />
+<img src="docs/screenshots/desktop-app-list.jpg" alt="Desktop List" width="100%" />
 <br/><sub>Click logo to expand, click outside to collapse</sub>
 </td>
 </tr>
 <tr>
 <td width="50%">
 <strong>Full Desktop View</strong><br/>
-<img src="docs/screenshots/desktop-app.png" alt="Desktop Full" width="100%" />
+<img src="docs/screenshots/desktop-app.jpg" alt="Desktop Full" width="100%" />
 <br/><sub>Widget + Settings + AI Chat side by side</sub>
 </td>
 <td width="50%">
 <strong>AI Assistant</strong><br/>
-<img src="docs/screenshots/desktop-ai-assistant.png" alt="Desktop AI" width="100%" />
+<img src="docs/screenshots/desktop-ai-assistant.jpg" alt="Desktop AI" width="100%" />
 <br/><sub>Streaming chat with @ article references</sub>
 </td>
 </tr>

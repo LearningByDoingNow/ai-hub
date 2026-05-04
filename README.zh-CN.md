@@ -100,19 +100,19 @@ LLM 配置、数据源管理、定时抓取设置。
 </td>
 <td width="50%">
 <strong>展开卡片列表</strong><br/>
-<img src="docs/screenshots/desktop-app-list.png" alt="卡片列表" width="100%" />
+<img src="docs/screenshots/desktop-app-list.jpg" alt="卡片列表" width="100%" />
 <br/><sub>点击展开，点击外部收起</sub>
 </td>
 </tr>
 <tr>
 <td width="50%">
 <strong>桌面全景</strong><br/>
-<img src="docs/screenshots/desktop-app.png" alt="全景" width="100%" />
+<img src="docs/screenshots/desktop-app.jpg" alt="全景" width="100%" />
 <br/><sub>组件 + 设置 + AI 对话并排使用</sub>
 </td>
 <td width="50%">
 <strong>AI 助手</strong><br/>
-<img src="docs/screenshots/desktop-ai-assistant.png" alt="AI 助手" width="100%" />
+<img src="docs/screenshots/desktop-ai-assistant.jpg" alt="AI 助手" width="100%" />
 <br/><sub>流式输出 + @ 引用文章分析</sub>
 </td>
 </tr>
