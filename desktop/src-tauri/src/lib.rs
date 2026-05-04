@@ -189,7 +189,13 @@ fn save_config_value(key: String, value: String) -> Result<(), String> {
 }
 
 fn find_node() -> Option<std::path::PathBuf> {
-    let candidates = [
+    #[cfg(target_os = "windows")]
+    let candidates: &[&str] = &[
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Program Files (x86)\\nodejs\\node.exe",
+    ];
+    #[cfg(not(target_os = "windows"))]
+    let candidates: &[&str] = &[
         "/opt/homebrew/bin/node",
         "/usr/local/bin/node",
         "/usr/bin/node",
@@ -198,8 +204,12 @@ fn find_node() -> Option<std::path::PathBuf> {
         let p = std::path::PathBuf::from(c);
         if p.exists() { return Some(p); }
     }
-    // Try PATH via which
-    std::process::Command::new("/usr/bin/which")
+    // Try PATH via which/where
+    #[cfg(target_os = "windows")]
+    let which_cmd = "where";
+    #[cfg(not(target_os = "windows"))]
+    let which_cmd = "/usr/bin/which";
+    std::process::Command::new(which_cmd)
         .arg("node")
         .output()
         .ok()
