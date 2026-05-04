@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>AI-Powered Global Information Aggregation Platform</strong><br/>
-  <sub>AI 驱动的全球信息聚合平台 — 智能抓取、过滤、聚合，重要的事不错过</sub>
+  <sub>Smart fetching, filtering, and aggregation — never miss what matters</sub>
 </p>
 
 <p align="center">
