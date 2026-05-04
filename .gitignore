@@ -44,3 +44,13 @@ AGENTS.md
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Build artifacts
+desktop/src-tauri/target/
+.playwright-mcp/
+*.png
+!public/*.png
+!desktop/public/*.png
+!desktop/src-tauri/icons/*.png
+desktop/node_modules/
+desktop/dist/

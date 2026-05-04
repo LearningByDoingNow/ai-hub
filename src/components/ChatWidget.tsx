@@ -38,6 +38,8 @@ export default function ChatWidget() {
   // Draggable state
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [mounted, setMounted] = useState(false);
+  const [entrance, setEntrance] = useState(true);
+  const [showTip, setShowTip] = useState(false);
   const dragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0, px: 0, py: 0 });
   const hasMoved = useRef(false);
@@ -48,9 +50,17 @@ export default function ChatWidget() {
   const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
 
   useEffect(() => {
-    setPos({ x: window.innerWidth - 80, y: window.innerHeight - 80 });
+    setPos({ x: window.innerWidth - 80, y: window.innerHeight * 0.62 });
     setMounted(true);
-  }, []);
+    setTimeout(() => setEntrance(false), 1500);
+    if (!localStorage.getItem("ai-hub-tip-seen")) {
+      setTimeout(() => setShowTip(true), 2200);
+      setTimeout(() => {
+        setShowTip(false);
+        localStorage.setItem("ai-hub-tip-seen", "1");
+      }, 12000);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -236,17 +246,47 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Floating Button — always shows pearl, only opens */}
+      {/* Floating Button with entrance animation */}
       {!open && (
         <div
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          onClick={handleClick}
+          onClick={(e) => { if (showTip) { setShowTip(false); localStorage.setItem("ai-hub-tip-seen", "1"); } handleClick(); }}
           style={{ left: pos.x, top: pos.y, touchAction: "none" }}
-          className="fixed z-50 flex h-14 w-14 cursor-grab items-center justify-center rounded-full shadow-lg transition-shadow active:cursor-grabbing active:shadow-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:shadow-xl"
+          className={`fixed z-50 flex h-16 w-16 cursor-grab items-center justify-center active:cursor-grabbing hover:scale-110 active:scale-95 transition-all duration-700 select-none ${
+            entrance ? "opacity-0 scale-50 blur-sm" : "opacity-100 scale-100 blur-0"
+          }`}
         >
-          <img src="/logo-transparent.png" alt="Chat" className="h-10 w-10 pointer-events-none" />
+          {/* Sparkle ring on entrance */}
+          {!entrance && (
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute inset-[-8px] rounded-full animate-ping opacity-20 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400" style={{ animationDuration: "2s", animationIterationCount: "3" }} />
+              {[0, 60, 120, 180, 240, 300].map((deg) => (
+                <div
+                  key={deg}
+                  className="absolute w-1.5 h-1.5 rounded-full bg-amber-400 animate-sparkle"
+                  style={{
+                    left: `${50 + 42 * Math.cos((deg * Math.PI) / 180)}%`,
+                    top: `${50 + 42 * Math.sin((deg * Math.PI) / 180)}%`,
+                    animationDelay: `${deg * 5}ms`,
+                    animationDuration: "1.5s",
+                    animationFillMode: "forwards",
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          <img src="/logo-widget.png" alt="Chat" draggable={false} className="h-full w-full object-contain pointer-events-none drop-shadow-lg select-none" />
+
+          {/* First-visit tooltip */}
+          {showTip && (
+            <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-slate-900 px-4 py-2.5 text-sm text-white shadow-xl animate-fade-in">
+              <div className="font-medium">{locale === "zh" ? "👋 你好！我是 AI 助手" : "👋 Hi! I'm AI Assistant"}</div>
+              <div className="text-xs text-slate-300 mt-0.5">{locale === "zh" ? "点击我开始对话，输入 @ 引用文章" : "Click to chat, type @ to reference articles"}</div>
+              <div className="absolute right-[-6px] top-1/2 -translate-y-1/2 w-3 h-3 bg-slate-900 rotate-45" />
+            </div>
+          )}
         </div>
       )}
 
@@ -257,8 +297,8 @@ export default function ChatWidget() {
           style={{
             width: size.w,
             height: size.h,
-            left: Math.min(pos.x, window.innerWidth - size.w - 8),
-            top: Math.max(0, pos.y - size.h - 10),
+            left: Math.max(8, Math.min(pos.x, window.innerWidth - size.w - 8)),
+            top: Math.max(8, pos.y - size.h - 10),
           }}
         >
           {/* Resize handle — top-left corner */}
@@ -291,7 +331,7 @@ export default function ChatWidget() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
             <div className="flex items-center gap-2">
-              <img src="/logo-transparent.png" alt="" className="h-8 w-8" />
+              <img src="/logo-widget.png" alt="" className="h-8 w-8" />
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">AI Hub Assistant</h3>
                 <p className="text-xs text-slate-400">

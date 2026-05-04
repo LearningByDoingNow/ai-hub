@@ -50,6 +50,15 @@ function localDate() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+const MAX_AGE_DAYS = 7;
+function isRecent(dateStr) {
+  if (!dateStr || dateStr === "NaN-NaN-NaN") return true;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return true;
+  const age = Date.now() - d.getTime();
+  return age < MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+}
+
 async function runFetch() {
   const db = getDb();
   const sources = getEnabledSources(db);
@@ -57,10 +66,24 @@ async function runFetch() {
 
   console.log(`\n[${localTime()}] Fetching from ${sources.length} sources (parallel)...`);
 
-  // Parallel fetch all sources
-  const results = await Promise.allSettled(
-    sources.map((source) => fetchSource(source).then((r) => ({ ...r, source })))
+  // Parallel fetch all sources with global 30s deadline
+  const DEADLINE_MS = 30000;
+  let deadlineTimer;
+  const deadline = new Promise((_, reject) => {
+    deadlineTimer = setTimeout(() => reject(new Error("deadline")), DEADLINE_MS);
+  });
+  const settled = [];
+  const tasks = sources.map((source) =>
+    fetchSource(source)
+      .then((r) => ({ ...r, source }))
+      .then((r) => { settled.push({ status: "fulfilled", value: r }); return r; })
+      .catch((e) => { settled.push({ status: "rejected", reason: e }); })
   );
+  await Promise.race([Promise.allSettled(tasks), deadline]).catch(() => {
+    console.log(`  ⏱ Global ${DEADLINE_MS / 1000}s deadline reached, using ${settled.length}/${sources.length} results`);
+  });
+  clearTimeout(deadlineTimer);
+  const results = settled;
 
   const insertNews = db.prepare(
     "INSERT OR IGNORE INTO news (id, title, title_en, source, date, summary, summary_en, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
@@ -88,9 +111,10 @@ async function runFetch() {
         : result.items.filter((item) => isAIRelated(item.title, item.summary));
 
       let added = 0;
+      let skippedOld = 0;
       for (const item of filtered) {
-        // Use local date if article has no date
         if (!item.date || item.date === "NaN-NaN-NaN") item.date = localDate();
+        if (!isRecent(item.date)) { skippedOld++; continue; }
         const r = insertNews.run(
           item.id, item.title, item.title_en, item.source.name || item.source,
           item.date, item.summary, item.summary_en, item.url
@@ -98,7 +122,8 @@ async function runFetch() {
         if (r.changes > 0) added++;
       }
       totalNew += added;
-      console.log(`  ✓ ${result.source.name} [${result.source.type || "rss"}]: ${result.items.length} found, ${filtered.length} relevant, ${added} new`);
+      const oldNote = skippedOld > 0 ? `, ${skippedOld} old` : "";
+      console.log(`  ✓ ${result.source.name} [${result.source.type || "rss"}]: ${result.items.length} found, ${filtered.length} relevant, ${added} new${oldNote}`);
     }
   });
   insertAll();
@@ -111,6 +136,7 @@ async function runFetch() {
     "INSERT INTO pipeline_runs (id, task_type, status, items_processed, completed_at) VALUES (hex(randomblob(16)), 'news', 'success', ?, datetime('now','localtime'))"
   ).run(totalNew);
 
+  db.pragma("wal_checkpoint(TRUNCATE)");
   db.close();
   return totalNew;
 }
@@ -128,6 +154,7 @@ console.log(`Strategies: RSS + Web Scrape + API\n`);
 if (mode === "once") {
   await runFetch();
   console.log("\nDone.");
+  process.exit(0);
 } else if (mode === "schedule") {
   console.log(`Schedule: every ${intervalHours} hours`);
   console.log("Press Ctrl+C to stop.\n");

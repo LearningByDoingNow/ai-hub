@@ -5,7 +5,7 @@ import Parser from "rss-parser";
 import { generateId, stripHtml, truncate, parseDate } from "./utils.mjs";
 
 const parser = new Parser({
-  timeout: 15000,
+  timeout: 8000,
   headers: { "User-Agent": "AI-Hub-Engine/2.0" },
 });
 

@@ -44,7 +44,7 @@ export async function GET() {
   const sdb = new Database(dbPath);
 
   const runs = sdb
-    .prepare("SELECT * FROM pipeline_runs ORDER BY started_at DESC LIMIT 20")
+    .prepare("SELECT * FROM pipeline_runs ORDER BY rowid DESC LIMIT 20")
     .all();
 
   const recentNews = sdb
@@ -62,12 +62,16 @@ export async function GET() {
   const sourcesCount = sdb
     .prepare("SELECT COUNT(*) as c FROM sources WHERE enabled = 1")
     .get() as { c: number };
+  const lastRun = sdb
+    .prepare("SELECT completed_at FROM pipeline_runs ORDER BY rowid DESC LIMIT 1")
+    .get() as { completed_at: string } | undefined;
 
   sdb.close();
 
   return NextResponse.json({
     runs,
     recentNews,
+    lastUpdated: lastRun?.completed_at || null,
     stats: {
       news: newsCount.c,
       papers: papersCount.c,

@@ -35,13 +35,13 @@ export function parseDate(dateStr) {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return todayDate();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return d.toISOString();
   } catch {
     return todayDate();
   }
 }
 
-export async function fetchWithTimeout(url, opts = {}, timeout = 15000) {
+export async function fetchWithTimeout(url, opts = {}, timeout = 8000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
@@ -65,7 +65,7 @@ export async function fetchWithTimeout(url, opts = {}, timeout = 15000) {
   }
 }
 
-export function fetchWithCurl(url, timeout = 15) {
+export function fetchWithCurl(url, timeout = 8) {
   try {
     const html = execSync(
       `curl -sL --max-time ${timeout} -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" -H "Accept-Language: zh-CN,zh;q=0.9" "${url}"`,

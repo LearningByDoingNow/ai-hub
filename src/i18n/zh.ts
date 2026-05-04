@@ -4,13 +4,7 @@ export const zh: Record<string, string> = {
   "nav.news": "AI 资讯",
   "nav.papers": "论文追踪",
 
-  // Hero
-  "hero.title": "发现全球最优秀的 AI 产品",
-  "hero.subtitle": "一站式浏览 AI 公司产品、最新资讯与前沿论文",
-  "hero.cta": "浏览产品",
-  "hero.providers": "家供应商",
-  "hero.news": "新闻资讯",
-  "hero.papers": "前沿论文",
+  // Hero (kept for reference, HeroSection uses dynamic module data now)
 
   // Filter
   "filter.all": "全部",
@@ -31,7 +25,7 @@ export const zh: Record<string, string> = {
   "cat.AI 机器人": "AI 机器人",
 
   // Search
-  "search.placeholder": "搜索 AI 供应商、模型、工具...",
+  "search.placeholder": "搜索 AI AI 公司、模型、工具...",
 
   // Provider
   "provider.domestic": "国内",
@@ -46,8 +40,8 @@ export const zh: Record<string, string> = {
   // Providers page
   "providers.title": "AI产品导航",
   "providers.subtitle": "汇集全球 AI 公司的产品、开放平台与文档",
-  "providers.count": "共 {count} 家供应商",
-  "providers.empty": "没有找到匹配的供应商",
+  "providers.count": "共 {count} 家AI 公司",
+  "providers.empty": "没有找到匹配的AI 公司",
   "providers.emptyHint": "试试其他关键词或分类",
   "providers.sectionDomestic": "国内",
   "providers.sectionInternational": "国外",
@@ -65,7 +59,7 @@ export const zh: Record<string, string> = {
 
   // Footer
   "footer.about": "关于",
-  "footer.aboutDesc": "AI Hub 致力于汇集全球 AI 产品导航、行业资讯与前沿论文，帮助用户快速发现和访问优质 AI 资源。",
+  "footer.aboutDesc": "AI Hub 自动聚合全球优质信息源，实时追踪 AI 资讯、前沿论文与国际动态，帮助用户快速发现优质 AI 资源。",
   "footer.quickLinks": "快速链接",
   "footer.resources": "资源",
   "footer.github": "GitHub",
