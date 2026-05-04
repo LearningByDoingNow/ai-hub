@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="public/logo-transparent.png" alt="AI Hub" width="120" />
+  <img src="docs/screenshots/readme-1.png" alt="AI Hub" width="280" />
 </p>
-
-<h1 align="center">AI Hub</h1>
 
 <p align="center">
   <strong>AI 驱动的全球信息聚合平台</strong><br/>
