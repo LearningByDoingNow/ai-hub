@@ -88,6 +88,21 @@ Configure LLM, manage data sources, set auto-fetch intervals, and more.
 <img src="docs/screenshots/setting-dark-lllm.png" alt="LLM Settings" width="100%" />
 </details>
 
+#### Module Management
+Create custom content modules to organize feeds by topic — fully configurable names, icons, and sort order.
+
+<img src="docs/screenshots/module.png" alt="Module Management" width="100%" />
+
+#### Data Sources
+Add, edit, and manage RSS feeds. Assign each source to a module for organized content delivery.
+
+<img src="docs/screenshots/data-resource.png" alt="Data Sources" width="100%" />
+
+#### AI Company Management
+Full CRUD for the AI products directory — add companies, set categories, manage links and tags.
+
+<img src="docs/screenshots/ai-enterprise.png" alt="AI Company Management" width="100%" />
+
 ---
 
 ### Desktop Widget (macOS)

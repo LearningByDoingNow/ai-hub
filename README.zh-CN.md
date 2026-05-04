@@ -83,6 +83,21 @@ LLM 配置、数据源管理、定时抓取设置。
 
 <img src="docs/screenshots/settring-dark.png" alt="设置" width="100%" />
 
+#### 模块管理
+自定义内容模块，按主题组织信息流 — 名称、图标、排序完全可配置。
+
+<img src="docs/screenshots/module.png" alt="模块管理" width="100%" />
+
+#### 数据源管理
+添加、编辑、管理 RSS 数据源，指定所属模块，灵活组织内容。
+
+<img src="docs/screenshots/data-resource.png" alt="数据源" width="100%" />
+
+#### AI 公司管理
+AI 产品导航的完整管理 — 增删改查公司信息、分类、链接、标签。
+
+<img src="docs/screenshots/ai-enterprise.png" alt="AI 公司管理" width="100%" />
+
 ---
 
 ### 桌面组件 (macOS)
