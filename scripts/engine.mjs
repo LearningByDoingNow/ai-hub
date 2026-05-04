@@ -50,7 +50,7 @@ function localDate() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-const MAX_AGE_DAYS = 7;
+const MAX_AGE_DAYS = 1;
 function isRecent(dateStr) {
   if (!dateStr || dateStr === "NaN-NaN-NaN") return true;
   const d = new Date(dateStr);
@@ -127,6 +127,13 @@ async function runFetch() {
     }
   });
   insertAll();
+
+  // Cleanup: delete news older than 30 days (but keep favorites)
+  const RETENTION_DAYS = 30;
+  const cleaned = db.prepare(
+    "DELETE FROM news WHERE date < datetime('now', ? || ' days') AND id NOT IN (SELECT id FROM favorites WHERE type = 'news')"
+  ).run(`-${RETENTION_DAYS}`);
+  if (cleaned.changes > 0) console.log(`  Cleaned ${cleaned.changes} articles older than ${RETENTION_DAYS} days`);
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   const total = db.prepare("SELECT COUNT(*) as count FROM news").get();
