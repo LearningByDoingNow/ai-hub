@@ -63,7 +63,7 @@ export async function fetchWechat(source) {
     let summary = stripHtml($el.find("p, .txt-info").first().text());
 
     items.push({
-      id: generateId(link),
+      id: generateId(`${source.name}:${title}`),
       title: truncate(title, 200),
       title_en: "",
       source: source.name,
