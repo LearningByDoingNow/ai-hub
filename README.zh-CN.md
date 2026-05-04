@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://learningbydoingnow.github.io/ai-hub/">在线预览</a> |
+  <a href="https://learningbydoingnow.github.io/ai-hub/">在线预览</a><sup>*</sup> |
   <a href="#快速开始">快速开始</a> |
   <a href="#核心功能">功能介绍</a> |
   <a href="#桌面组件">桌面组件</a> |
@@ -16,6 +16,8 @@
   <a href="docs/USER_GUIDE.md">使用指南</a> |
   <a href="README.md">English</a>
 </p>
+
+<sub>* 在线预览仅为简略功能演示（只读），不包含 AI 对话、设置管理、定时抓取等完整功能。体验所有功能请 clone 本地运行。</sub>
 
 ---
 

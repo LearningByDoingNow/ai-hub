@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://learningbydoingnow.github.io/ai-hub/">Live Preview</a> •
+  <a href="https://learningbydoingnow.github.io/ai-hub/">Live Preview</a><sup>*</sup> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#features">Features</a> •
   <a href="#desktop-widget">Desktop Widget</a> •
@@ -16,6 +16,8 @@
   <a href="docs/USER_GUIDE.md">User Guide</a> •
   <a href="README.zh-CN.md">中文</a>
 </p>
+
+<sub>* Online preview is a simplified read-only demo. For full features (AI chat, settings, auto-fetch, desktop widget), please clone and run locally.</sub>
 
 ---
 
