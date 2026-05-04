@@ -11,11 +11,15 @@
 import { fetchRSS } from "./rss.mjs";
 import { fetchScrape } from "./scrape.mjs";
 import { fetchAPI } from "./api.mjs";
+import { fetchTwitter } from "./twitter.mjs";
+import { fetchWechat } from "./wechat.mjs";
 
 const fetchers = {
   rss: fetchRSS,
   scrape: fetchScrape,
   api: fetchAPI,
+  twitter: fetchTwitter,
+  wechat: fetchWechat,
 };
 
 export async function fetchSource(source) {

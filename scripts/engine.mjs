@@ -64,25 +64,40 @@ async function runFetch() {
   const sources = getEnabledSources(db);
   const startTime = Date.now();
 
-  console.log(`\n[${localTime()}] Fetching from ${sources.length} sources (parallel)...`);
+  // Separate Twitter sources (rate-limited, sequential) from others (parallel)
+  const twitterSources = sources.filter((s) => s.type === "twitter");
+  const otherSources = sources.filter((s) => s.type !== "twitter");
 
-  // Parallel fetch all sources with global 30s deadline
+  console.log(`\n[${localTime()}] Fetching from ${sources.length} sources (${otherSources.length} parallel + ${twitterSources.length} Twitter sequential)...`);
+
+  // Phase 1: Parallel fetch non-Twitter sources with 30s deadline
   const DEADLINE_MS = 30000;
   let deadlineTimer;
   const deadline = new Promise((_, reject) => {
     deadlineTimer = setTimeout(() => reject(new Error("deadline")), DEADLINE_MS);
   });
   const settled = [];
-  const tasks = sources.map((source) =>
+  const tasks = otherSources.map((source) =>
     fetchSource(source)
       .then((r) => ({ ...r, source }))
       .then((r) => { settled.push({ status: "fulfilled", value: r }); return r; })
       .catch((e) => { settled.push({ status: "rejected", reason: e }); })
   );
   await Promise.race([Promise.allSettled(tasks), deadline]).catch(() => {
-    console.log(`  ⏱ Global ${DEADLINE_MS / 1000}s deadline reached, using ${settled.length}/${sources.length} results`);
+    console.log(`  ⏱ Global ${DEADLINE_MS / 1000}s deadline reached, using ${settled.length}/${otherSources.length} results`);
   });
   clearTimeout(deadlineTimer);
+
+  // Phase 2: Sequential Twitter fetch (respects rate limits)
+  for (const source of twitterSources) {
+    try {
+      const r = await fetchSource(source);
+      settled.push({ status: "fulfilled", value: { ...r, source } });
+    } catch (e) {
+      settled.push({ status: "rejected", reason: e });
+    }
+  }
+
   const results = settled;
 
   const insertNews = db.prepare(
@@ -106,7 +121,8 @@ async function runFetch() {
         continue;
       }
 
-      const filtered = result.source.type === "scrape"
+      const skipFilter = result.source.type === "scrape" || result.source.type === "wechat" || result.source.type === "twitter";
+      const filtered = skipFilter
         ? result.items
         : result.items.filter((item) => isAIRelated(item.title, item.summary));
 
@@ -151,12 +167,24 @@ async function runFetch() {
 // --- Main ---
 const args = process.argv.slice(2);
 const mode = args[0] || "once";
-const intervalHours = parseInt(args[1] || "4", 10);
+
+function getConfigInterval() {
+  try {
+    const db = getDb();
+    const row = db.prepare("SELECT value FROM pipeline_config WHERE key = 'fetch_interval_hours'").get();
+    db.close();
+    return parseInt(row?.value || "4", 10);
+  } catch {
+    return 4;
+  }
+}
+
+const intervalHours = parseInt(args[1], 10) || getConfigInterval();
 
 console.log("AI Hub Fetch Engine v2");
 console.log("======================");
 console.log(`Mode: ${mode} | Time: ${localTime()}`);
-console.log(`Strategies: RSS + Web Scrape + API\n`);
+console.log(`Strategies: RSS + Web Scrape + API + WeChat\n`);
 
 if (mode === "once") {
   await runFetch();

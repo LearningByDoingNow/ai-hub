@@ -122,6 +122,29 @@ const defaultSources = [
   ["nyt-world", "New York Times World", "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "rss", "en", "国际时政"],
   ["ap-world", "AP News World", "https://feedx.net/rss/ap.xml", "rss", "en", "国际时政"],
   ["rfi-cn", "RFI 法广中文", "https://www.rfi.fr/cn/rss", "rss", "zh", "国际时政"],
+  // Twitter (via syndication API, no auth needed)
+  ["tw-openai", "Twitter: OpenAI", "OpenAI", "twitter", "en", "news"],
+  ["tw-anthropic", "Twitter: Anthropic", "AnthropicAI", "twitter", "en", "news"],
+  ["tw-deepmind", "Twitter: DeepMind", "GoogleDeepMind", "twitter", "en", "news"],
+  ["tw-nvidiaai", "Twitter: NVIDIA AI", "NVIDIAAI", "twitter", "en", "news"],
+  ["tw-mistral", "Twitter: Mistral", "MistralAI", "twitter", "en", "news"],
+  ["tw-elonmusk", "Twitter: Elon Musk", "elonmusk", "twitter", "en", "news"],
+  ["tw-deepseek", "Twitter: DeepSeek", "deepseek_ai", "twitter", "en", "news"],
+  ["tw-sama", "Twitter: Sam Altman", "sama", "twitter", "en", "news"],
+  ["tw-ylecun", "Twitter: Yann LeCun", "ylecun", "twitter", "en", "news"],
+  ["tw-karpathy", "Twitter: Andrej Karpathy", "karpathy", "twitter", "en", "news"],
+  ["tw-jimfan", "Twitter: Jim Fan", "DrJimFan", "twitter", "en", "news"],
+  ["tw-reuters", "Twitter: Reuters", "Reuters", "twitter", "en", "国际时政"],
+  ["tw-ap", "Twitter: AP", "AP", "twitter", "en", "国际时政"],
+  ["tw-bbc", "Twitter: BBC Breaking", "BBCBreaking", "twitter", "en", "国际时政"],
+  ["tw-cnn", "Twitter: CNN Breaking", "cnnbrk", "twitter", "en", "国际时政"],
+  ["tw-aj", "Twitter: Al Jazeera", "AJEnglish", "twitter", "en", "国际时政"],
+  // WeChat Public Accounts
+  ["wx-jiqizhixin", "机器之心", "机器之心", "wechat", "zh", "news"],
+  ["wx-quantumbit", "量子位", "量子位", "wechat", "zh", "news"],
+  ["wx-jiuwanli", "九万里", "九万里", "wechat", "zh", "news"],
+  ["wx-xinzhiyuan", "新智元", "新智元", "wechat", "zh", "news"],
+  ["wx-aiqianxian", "AI前线", "AI前线", "wechat", "zh", "news"],
 ];
 
 let added = 0;
@@ -133,6 +156,15 @@ console.log(`Sources: ${added} new (${defaultSources.length} total defaults)`);
 
 const total = db.prepare("SELECT COUNT(*) as c FROM sources WHERE enabled = 1").get();
 console.log(`Total active sources: ${total.c}`);
+
+// 5. Insert default pipeline config
+const insertConfig = db.prepare("INSERT OR IGNORE INTO pipeline_config (key, value) VALUES (?, ?)");
+const defaultConfig = [
+  ["fetch_interval_hours", "4"],
+  ["rsshub_base_url", "https://rsshub.app"],
+];
+for (const [k, v] of defaultConfig) insertConfig.run(k, v);
+console.log("Pipeline config initialized");
 
 db.pragma("wal_checkpoint(TRUNCATE)");
 db.close();
