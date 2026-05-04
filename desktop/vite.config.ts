@@ -18,6 +18,7 @@ export default defineConfig({
       input: {
         main: "index.html",
         chat: "chat.html",
+        settings: "settings.html",
       },
     },
   },

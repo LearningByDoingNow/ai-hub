@@ -53,6 +53,22 @@ function timeAgo(dateStr: string): string {
   return dateStr.slice(0, 10);
 }
 
+function getFreshness(dateStr: string): number {
+  if (!dateStr) return 0;
+  let d: Date;
+  if (dateStr.includes("T")) d = new Date(dateStr);
+  else if (dateStr.includes(" ")) d = new Date(dateStr.replace(" ", "T") + "Z");
+  else d = new Date(dateStr + "T00:00:00");
+  if (isNaN(d.getTime())) return 0;
+  const hours = (Date.now() - d.getTime()) / 3600000;
+  if (hours < 1) return 1;
+  if (hours < 3) return 0.8;
+  if (hours < 6) return 0.6;
+  if (hours < 12) return 0.4;
+  if (hours < 24) return 0.2;
+  return 0.05;
+}
+
 function CardItem({ card, onDismiss, onClick }: {
   card: NotifCard;
   onDismiss: () => void;
@@ -64,6 +80,7 @@ function CardItem({ card, onDismiss, onClick }: {
     ? (card.data.summary || card.data.summary_en)
     : card.data.authors?.slice(0, 3).join(", ") || "";
   const badge = isNews ? card.data.source : (card.data.venue || "Paper");
+  const freshness = getFreshness(card.data.date);
 
   return (
     <div className={card.exiting ? "card-slide-out" : "card-slide-in"}>
@@ -71,11 +88,15 @@ function CardItem({ card, onDismiss, onClick }: {
         onClick={onClick}
         className="group relative cursor-pointer active:scale-[0.98] transition-transform"
       >
-        <div className={`relative rounded-xl overflow-hidden border ${
-          isNews
-            ? "bg-white/90 dark:bg-[#1a1d2e]/90 border-blue-200/30 dark:border-blue-500/10"
-            : "bg-white/90 dark:bg-[#1e1a2e]/90 border-purple-200/30 dark:border-purple-500/10"
-        } backdrop-blur-xl shadow-lg`}>
+        <div
+          className={`relative rounded-xl overflow-hidden border backdrop-blur-xl shadow-lg ${
+            freshness >= 0.8
+              ? (isNews ? "bg-blue-50/95 dark:bg-blue-950/40 border-blue-300/50" : "bg-purple-50/95 dark:bg-purple-950/40 border-purple-300/50")
+              : freshness >= 0.4
+                ? (isNews ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/30" : "bg-purple-50/50 dark:bg-purple-950/20 border-purple-200/30")
+                : (isNews ? "bg-white/90 dark:bg-[#1a1d2e]/90 border-slate-200/30 dark:border-slate-500/10" : "bg-white/90 dark:bg-[#1e1a2e]/90 border-slate-200/30 dark:border-slate-500/10")
+          }`}
+        >
 
           <button
             onClick={(e) => { e.stopPropagation(); onDismiss(); }}
@@ -187,8 +208,8 @@ export default function App() {
           const t = await import("./lib/tauri");
           tauriLib = t;
           [news, papers] = await Promise.all([
-            t.getNewsSince("2000-01-01"),
-            t.getPapersSince("2000-01-01"),
+            t.getNews(50, []),
+            t.getPapers(10),
           ]);
         } else {
           news = MOCK_NEWS;
@@ -409,7 +430,13 @@ export default function App() {
             onClick={() => { skipBlurRef.current = true; tauriLib?.openChatWindow(); }}
             className="px-2 py-1 rounded-lg text-[10px] font-medium text-white bg-indigo-500/90 hover:bg-indigo-600 shadow-lg transition-all whitespace-nowrap"
           >
-            AI Chat
+            AI
+          </button>
+          <button
+            onClick={() => { skipBlurRef.current = true; import("@tauri-apps/api/core").then(m => m.invoke("open_settings_window")); }}
+            className="px-2 py-1 rounded-lg text-[10px] font-medium text-white bg-slate-600/90 hover:bg-slate-700 shadow-lg transition-all whitespace-nowrap"
+          >
+            设置
           </button>
           {count > 0 && (
             <button

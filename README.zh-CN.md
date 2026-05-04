@@ -1,199 +1,139 @@
 <p align="center">
-  <img src="public/logo-transparent.png" alt="AI Hub" width="200" />
+  <img src="public/logo-transparent.png" alt="AI Hub" width="120" />
 </p>
 
 <h1 align="center">AI Hub</h1>
 
 <p align="center">
-  <strong>一站式 AI 行业情报平台</strong>
+  <strong>AI 驱动的全球信息聚合平台</strong><br/>
+  <sub>智能聚合全球优质信息源，覆盖科技、学术、国际时政等多领域，让你一站掌握全局动态</sub>
 </p>
 
 <p align="center">
-  追踪 AI 公司动态、聚合行业资讯、关注前沿论文、内置 AI 对话助手。
-</p>
-
-<p align="center">
-  <a href="https://ai-hub-zeta-ten.vercel.app">在线演示</a> &bull;
-  <a href="./README.md">English</a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js" />
-  <img src="https://img.shields.io/badge/React-19-blue?logo=react" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
+  <a href="#快速开始">快速开始</a> |
+  <a href="#核心功能">功能介绍</a> |
+  <a href="#桌面组件">桌面组件</a> |
+  <a href="docs/TECHNICAL.md">技术文档</a> |
+  <a href="docs/USER_GUIDE.md">使用指南</a> |
+  <a href="README.md">English</a>
 </p>
 
 ---
 
-<p align="center">
-  <a href="https://ai-hub-zeta-ten.vercel.app">
-    <img src="docs/screenshots/home.png" alt="AI Hub 首页" width="800" />
-  </a>
-</p>
+## 项目简介
+
+AI Hub 自动聚合 **70+ 全球优质信息源**的内容，涵盖 AI 科技、学术论文、国际时政等领域。提供现代化 WebUI 和原生 macOS 桌面组件，共享同一数据引擎。
+
+**两种使用方式：**
+- **WebUI** — 功能完整的网页界面（搜索、设置、AI 对话、收藏等）
+- **桌面组件** — 轻量浮动组件（实时通知、AI 对话、设置）
+
+两者共享相同数据库和配置，可单独使用也可配合使用。
 
 ---
 
-## 功能特性
+## 核心功能
 
-- **AI 产品导航** — 浏览 100+ AI 公司，支持分类/地区筛选
-- **AI 资讯聚合** — 自动从 RSS、网页抓取 AI 新闻，AI 关键词过滤
-- **论文追踪** — 追踪 arXiv 前沿研究论文
-- **国际时政** — 聚合全球主流媒体国际新闻
-- **AI 聊天助手** — 内置 AI 对话，支持 `@提及` 引用文章内容
-- **自定义模块** — 创建个性化订阅源组合
-- **收藏夹** — 收藏新闻和论文
-- **全文搜索** — 跨内容类型搜索
-- **数据管线** — 手动或定时（每 4 小时 GitHub Actions）抓取数据
-- **中英双语** — 界面支持中文和英文切换
-- **深色/浅色主题** — 自动主题切换
+### 智能聚合引擎
+- **70+ 精选数据源** — OpenAI、DeepMind、TechCrunch、BBC、金融时报、arXiv 等
+- **智能过滤** — AI 相关性检测、7 天时效性窗口、去重
+- **并行抓取** — 所有源并发请求，30 秒截止，全部完成仅需 ~8 秒
+- **定时自动抓取** — 任意间隔（1 分钟到数小时），后台静默运行
 
-<details>
-<summary>更多截图</summary>
+### WebUI 网页端
+- **动态首页** — 实时统计、模块导航带数字
+- **多模块支持** — AI 资讯、论文追踪、国际时政、AI 产品导航（支持自定义模块）
+- **全文搜索** — 每个模块页面都有即时搜索
+- **AI 助手** — 流式输出、@ 引用文章、Markdown 渲染、了解平台所有功能
+- **精确时间** — 文章发布时间 + 相对时间双显示
+- **时效性色彩** — 越新的文章颜色越鲜明
+- **暗黑模式** — 完整明/暗主题切换
+- **中英双语** — 界面完整支持中英文
 
-| 新闻页 | 设置页 |
-|--------|--------|
-| ![News](docs/screenshots/news.png) | 管线控制、模块管理、数据源、LLM 配置 |
+### 桌面组件 (macOS)
+- **浮动 Logo** — 置顶+轨道粒子+彩虹光环+星光特效
+- **实时通知** — 新文章自动弹出 toast 卡片
+- **卡片列表** — 点击展开，点击外部收起
+- **AI 对话** — 流式输出+@引用（WebUI 在线时流式，离线时本地调用）
+- **设置面板** — LLM 配置、抓取间隔、手动抓取
+- **数据共享** — 和 WebUI 使用同一数据库
 
-</details>
+### AI 产品导航
+- **59 家 AI 公司** — OpenAI、Anthropic、Google、Meta、NVIDIA、DeepSeek、Mistral 等
+- **9 大分类** — 大模型、AI 助手、AI 编程、AI 绘画、AI 视频、AI 音频、AI 搜索、AI 基础设施、AI 机器人
+- **直达链接** — 官网、API 控制台、文档、体验地址
 
-## 技术栈
-
-| 层级 | 技术 |
-|------|------|
-| 框架 | Next.js 16 (App Router, Turbopack) |
-| 语言 | TypeScript 5 |
-| UI | React 19 + Tailwind CSS 4 |
-| 数据库 | SQLite（本地）/ Supabase（云端） |
-| 数据管线 | RSS Parser + Cheerio + arXiv API |
-| AI 对话 | OpenAI 兼容 API（OpenRouter、DeepSeek 等） |
-| 定时任务 | GitHub Actions（每 4 小时） |
-| 部署 | Vercel |
+---
 
 ## 快速开始
 
 ### 环境要求
-
-- Node.js >= 20
-- npm 或 pnpm
+- **Node.js** 18+（推荐 20+）
+- **npm** 9+
 
 ### 安装
 
 ```bash
 git clone https://github.com/LearningByDoingNow/ai-hub.git
 cd ai-hub
-npm install
-node scripts/seed-sqlite.mjs   # 初始化数据库
-npm run dev                     # 启动开发服务器
+npm install        # 安装依赖 + 自动初始化数据库和默认数据源
 ```
 
-打开 [http://localhost:3000](http://localhost:3000) 查看。
-
-### 环境变量
-
-创建 `.env.local` 文件：
-
-```env
-# LLM 配置（AI 对话功能需要）
-LLM_BASE_URL=https://openrouter.ai/api/v1
-LLM_API_KEY=your-api-key
-LLM_MODEL=deepseek/deepseek-chat-v3-0324:free
-
-# 可选：Supabase（云端部署需要）
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
-
-> **提示：** 本地开发 SQLite 开箱即用，Supabase 仅在云端部署（如 Vercel）时需要。
-
-### 数据抓取
+### 配置 LLM（可选，用于 AI 对话）
 
 ```bash
-npm run fetch          # 抓取新闻
-npm run fetch:papers   # 抓取论文
-npm run fetch:all      # 全部抓取
-npm run fetch:schedule # 定时抓取（每 4 小时）
+cp .env.example .env.local
+# 编辑 .env.local 填入你的 LLM API 密钥
 ```
 
-## 部署
+支持任何 OpenAI 兼容 API（OpenAI、智谱、DeepSeek、Ollama 等）
 
-### Vercel（推荐）
+### 运行
 
-1. 推送代码到 GitHub
-2. 在 [vercel.com](https://vercel.com) 导入仓库
-3. 添加环境变量：`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
-4. 部署
-
-> 当 SQLite 不可用时（serverless 环境），应用自动切换到 Supabase。
-
-### Supabase 配置
-
-1. 在 [supabase.com](https://supabase.com) 创建项目
-2. 在 SQL Editor 中执行 `scripts/create-tables.sql`
-3. 配置环境变量
-
-## 项目结构
-
-```
-src/
-├── app/                  # 页面 & API 路由（Next.js App Router）
-│   ├── api/              # RESTful API
-│   ├── news/             # 新闻页
-│   ├── papers/           # 论文页
-│   ├── providers/        # AI 产品目录
-│   ├── favorites/        # 收藏
-│   ├── feed/[id]/        # 自定义模块
-│   └── settings/         # 设置面板
-├── components/           # React 组件
-├── lib/                  # 核心逻辑（数据库、查询）
-├── i18n/                 # 国际化（中文/英文）
-└── types/                # TypeScript 类型
-
-scripts/
-├── engine.mjs            # 新闻抓取引擎
-├── fetch-papers.mjs      # arXiv 论文抓取
-├── fetchers/             # 模块化抓取策略
-└── create-tables.sql     # 数据库建表
+```bash
+npm run fetch:all  # 首次抓取（从 70+ 源拉取数据，约 8 秒）
+npm run dev        # 启动 WebUI http://localhost:3000
 ```
 
-### 数据流
+打开 http://localhost:3000 即可使用。
 
+---
+
+## 桌面组件
+
+### 从源码构建（需要 Rust）
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh  # 安装 Rust
+npm run desktop:install
+npm run desktop:build
 ```
-RSS / 网页 / arXiv
-       │
-       ▼
- 抓取引擎 (scripts/)
-       │
-       ▼
- SQLite (本地) ──同步──▶ Supabase (云端)
-       │                       │
-       ▼                       ▼
- 本地开发服务器          Vercel 生产环境
-```
 
-## 可用脚本
+### 安装 DMG
 
-| 脚本 | 说明 |
+从 [GitHub Releases](https://github.com/LearningByDoingNow/ai-hub/releases) 下载，拖入应用程序即可。
+
+---
+
+## 技术栈
+
+| 层次 | 技术 |
 |------|------|
-| `npm run dev` | 启动开发服务器 |
-| `npm run build` | 生产构建 |
-| `npm run start` | 运行生产服务器 |
-| `npm run lint` | 运行 ESLint |
-| `npm run fetch` | 抓取新闻 |
-| `npm run fetch:papers` | 抓取论文 |
-| `npm run fetch:all` | 全部抓取 |
-| `npm run fetch:schedule` | 定时抓取（每 4 小时） |
+| 网页端 | Next.js 16, React 19, Tailwind CSS 4 |
+| 桌面端 | Tauri 2, Rust, React, Vite |
+| 数据库 | SQLite (better-sqlite3) WAL 模式 |
+| AI 对话 | OpenAI 兼容 API, SSE 流式 |
+| 数据抓取 | rss-parser, 并行+截止时间 |
 
-## 参与贡献
+---
 
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feat/amazing-feature`)
-3. 提交更改 (`git commit -m 'feat: add amazing feature'`)
-4. 推送分支 (`git push origin feat/amazing-feature`)
-5. 发起 Pull Request
+## 文档
+
+- **[技术文档](docs/TECHNICAL.md)** — 架构设计、数据库 Schema、API 参考
+- **[使用指南](docs/USER_GUIDE.md)** — 功能详解、配置说明、常见问题
+
+---
 
 ## 许可证
 
-[MIT License](LICENSE)
+[MIT](LICENSE)

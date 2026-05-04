@@ -43,41 +43,91 @@ pub struct LlmConfig {
     pub temperature: f64,
 }
 
+fn standalone_db_dir() -> PathBuf {
+    dirs::home_dir().unwrap_or_default().join(".aihub")
+}
+
 fn db_path() -> PathBuf {
     let candidates: Vec<PathBuf> = vec![
-        // 1. Explicit env override
         std::env::var("AIHUB_DB_PATH").ok().map(PathBuf::from),
-        // 2. Current working directory (project root when launched from there)
         Some(std::env::current_dir().unwrap_or_default().join("data").join("ai-hub.db")),
-        // 3. Parent of cwd (if running from desktop/)
         std::env::current_dir().ok().and_then(|p| p.parent().map(|pp| pp.join("data").join("ai-hub.db"))),
-        // 4. Relative to executable — dev mode (target/debug or target/release)
         std::env::current_exe().ok().and_then(|exe| {
             let mut p = exe.parent()?.to_path_buf();
-            // Walk up from target/debug/.. or target/release/.. to project root
             for _ in 0..5 {
                 let candidate = p.join("data").join("ai-hub.db");
-                if candidate.exists() {
-                    return Some(candidate);
-                }
+                if candidate.exists() { return Some(candidate); }
                 p = p.parent()?.to_path_buf();
             }
             None
         }),
-        // 5. Home directory fallback
         dirs::home_dir().map(|h| h.join("Desktop").join("ai-hub").join("data").join("ai-hub.db")),
+        Some(standalone_db_dir().join("ai-hub.db")),
     ]
     .into_iter()
     .flatten()
     .collect();
 
     for c in &candidates {
-        if c.exists() {
-            return c.clone();
-        }
+        if c.exists() { return c.clone(); }
     }
 
-    candidates.into_iter().next().unwrap_or_else(|| PathBuf::from("data/ai-hub.db"))
+    // None found — copy bundled database to ~/.aihub/ or create fresh one
+    let dir = standalone_db_dir();
+    let _ = std::fs::create_dir_all(&dir);
+    let path = dir.join("ai-hub.db");
+
+    // Try to copy bundled default.db from app resources
+    let copied = std::env::current_exe().ok().and_then(|exe| {
+        let resources = exe.parent()?.join("../Resources/resources/default.db");
+        if resources.exists() {
+            std::fs::copy(&resources, &path).ok()?;
+            Some(true)
+        } else {
+            None
+        }
+    });
+
+    if copied.is_none() {
+        // No bundled db, create from scratch
+        if let Ok(conn) = Connection::open(&path) {
+            let _ = init_standalone_db(&conn);
+        }
+    }
+    path
+}
+
+fn init_standalone_db(conn: &Connection) -> Result<(), String> {
+    conn.execute_batch("
+        CREATE TABLE IF NOT EXISTS providers (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, category TEXT NOT NULL, country TEXT NOT NULL, links TEXT NOT NULL DEFAULT '[]', tags TEXT NOT NULL DEFAULT '[]', created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
+        CREATE TABLE IF NOT EXISTS news (id TEXT PRIMARY KEY, title TEXT NOT NULL, title_en TEXT NOT NULL DEFAULT '', source TEXT NOT NULL, date TEXT NOT NULL, summary TEXT NOT NULL, summary_en TEXT NOT NULL DEFAULT '', url TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')));
+        CREATE TABLE IF NOT EXISTS papers (id TEXT PRIMARY KEY, title TEXT NOT NULL, authors TEXT NOT NULL DEFAULT '[]', venue TEXT NOT NULL DEFAULT '', date TEXT NOT NULL, abstract TEXT NOT NULL, abstract_en TEXT NOT NULL DEFAULT '', links TEXT NOT NULL DEFAULT '[]', created_at TEXT DEFAULT (datetime('now')));
+        CREATE TABLE IF NOT EXISTS sources (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'rss', url TEXT NOT NULL, lang TEXT NOT NULL DEFAULT 'en', enabled INTEGER NOT NULL DEFAULT 1, module TEXT NOT NULL DEFAULT 'news', module_ids TEXT NOT NULL DEFAULT '[]', created_at TEXT DEFAULT (datetime('now')));
+        CREATE TABLE IF NOT EXISTS modules (id TEXT PRIMARY KEY, name TEXT NOT NULL, name_en TEXT NOT NULL DEFAULT '', icon TEXT NOT NULL DEFAULT 'rss', sort_order INTEGER NOT NULL DEFAULT 0, created_at TEXT DEFAULT (datetime('now')));
+        CREATE TABLE IF NOT EXISTS pipeline_config (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT DEFAULT (datetime('now')));
+        CREATE TABLE IF NOT EXISTS pipeline_runs (id TEXT PRIMARY KEY DEFAULT (hex(randomblob(16))), task_type TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'running', items_processed INTEGER DEFAULT 0, error_message TEXT, started_at TEXT DEFAULT (datetime('now')), completed_at TEXT);
+        CREATE TABLE IF NOT EXISTS favorites (id TEXT PRIMARY KEY, type TEXT NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL DEFAULT '', created_at TEXT DEFAULT (datetime('now')));
+        CREATE INDEX IF NOT EXISTS idx_news_date ON news(date DESC);
+        CREATE INDEX IF NOT EXISTS idx_papers_date ON papers(date DESC);
+
+        INSERT OR IGNORE INTO modules VALUES ('providers','AI 产品导航','AI Products','grid',0,datetime('now'));
+        INSERT OR IGNORE INTO modules VALUES ('news','AI 资讯','AI News','newspaper',1,datetime('now'));
+        INSERT OR IGNORE INTO modules VALUES ('papers','论文追踪','Papers','book',2,datetime('now'));
+        INSERT OR IGNORE INTO modules VALUES ('国际时政','国际时政','World News','rss',3,datetime('now'));
+
+        INSERT OR IGNORE INTO sources VALUES ('openai-blog','OpenAI Blog','rss','https://openai.com/blog/rss.xml','en',1,'news','[]',datetime('now'));
+        INSERT OR IGNORE INTO sources VALUES ('deepmind-blog','Google DeepMind Blog','rss','https://deepmind.google/blog/rss.xml','en',1,'news','[]',datetime('now'));
+        INSERT OR IGNORE INTO sources VALUES ('hf-blog','Hugging Face Blog','rss','https://huggingface.co/blog/feed.xml','en',1,'news','[]',datetime('now'));
+        INSERT OR IGNORE INTO sources VALUES ('techcrunch-ai','TechCrunch AI','rss','https://techcrunch.com/category/artificial-intelligence/feed/','en',1,'news','[]',datetime('now'));
+        INSERT OR IGNORE INTO sources VALUES ('mit-tech','MIT Tech Review','rss','https://www.technologyreview.com/feed/','en',1,'news','[]',datetime('now'));
+        INSERT OR IGNORE INTO sources VALUES ('36kr','36氪','rss','https://36kr.com/feed','zh',1,'news','[]',datetime('now'));
+        INSERT OR IGNORE INTO sources VALUES ('ithome','IT之家','rss','https://www.ithome.com/rss/','zh',1,'news','[]',datetime('now'));
+        INSERT OR IGNORE INTO sources VALUES ('hackernews-ai','Hacker News (AI)','rss','https://hnrss.org/newest?q=AI+OR+LLM+OR+GPT','en',1,'news','[]',datetime('now'));
+        INSERT OR IGNORE INTO sources VALUES ('bbc-world','BBC World News','rss','https://feeds.bbci.co.uk/news/world/rss.xml','en',1,'国际时政','[]',datetime('now'));
+        INSERT OR IGNORE INTO sources VALUES ('guardian-world','The Guardian World','rss','https://www.theguardian.com/world/rss','en',1,'国际时政','[]',datetime('now'));
+        INSERT OR IGNORE INTO sources VALUES ('nyt-world','New York Times World','rss','https://rss.nytimes.com/services/xml/rss/nyt/World.xml','en',1,'国际时政','[]',datetime('now'));
+    ").map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 fn open_db() -> Result<Connection, String> {
@@ -156,16 +206,78 @@ pub fn fetch_modules() -> Result<Vec<Module>, String> {
     rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
 }
 
+pub fn find_project_root() -> Option<PathBuf> {
+    let db = db_path();
+    let parent = db.parent()?;
+    // If db is at ~/.aihub/ai-hub.db, project root is ~/.aihub
+    // If db is at <project>/data/ai-hub.db, project root is <project>
+    if parent.ends_with("data") {
+        parent.parent().map(|r| r.to_path_buf())
+    } else {
+        Some(parent.to_path_buf())
+    }
+}
+
+pub fn find_env_path() -> Option<PathBuf> {
+    // Try project root first, then standalone dir
+    if let Some(root) = find_project_root() {
+        let p = root.join(".env.local");
+        if p.exists() { return Some(p); }
+    }
+    let standalone = standalone_db_dir().join(".env.local");
+    Some(standalone)
+}
+
+pub fn search_news_papers(query: &str) -> Result<Vec<serde_json::Value>, String> {
+    let conn = open_db()?;
+    let q = format!("%{}%", query.to_lowercase());
+
+    let mut results = Vec::new();
+
+    let mut stmt = conn.prepare(
+        "SELECT id, title, title_en, source, date, summary, url FROM news WHERE LOWER(title) LIKE ?1 OR LOWER(title_en) LIKE ?1 OR LOWER(source) LIKE ?1 ORDER BY created_at DESC LIMIT 8"
+    ).map_err(|e| e.to_string())?;
+
+    let news = stmt.query_map([&q], |row| {
+        Ok(serde_json::json!({
+            "id": row.get::<_, String>(0)?,
+            "type": "news",
+            "title": row.get::<_, String>(1)?,
+            "source": row.get::<_, String>(3)?,
+            "date": row.get::<_, String>(4)?,
+            "summary": row.get::<_, String>(5)?,
+            "url": row.get::<_, String>(6)?,
+        }))
+    }).map_err(|e| e.to_string())?;
+
+    for item in news { if let Ok(v) = item { results.push(v); } }
+
+    let mut stmt2 = conn.prepare(
+        "SELECT id, title, venue, date, abstract, links FROM papers WHERE LOWER(title) LIKE ?1 ORDER BY created_at DESC LIMIT 5"
+    ).map_err(|e| e.to_string())?;
+
+    let papers = stmt2.query_map([&q], |row| {
+        let links_json: String = row.get(5)?;
+        let links: Vec<String> = serde_json::from_str(&links_json).unwrap_or_default();
+        Ok(serde_json::json!({
+            "id": row.get::<_, String>(0)?,
+            "type": "paper",
+            "title": row.get::<_, String>(1)?,
+            "source": row.get::<_, String>(2)?,
+            "date": row.get::<_, String>(3)?,
+            "summary": row.get::<_, String>(4)?,
+            "url": links.first().unwrap_or(&String::new()).clone(),
+        }))
+    }).map_err(|e| e.to_string())?;
+
+    for item in papers { if let Ok(v) = item { results.push(v); } }
+
+    results.truncate(10);
+    Ok(results)
+}
+
 pub fn fetch_llm_config() -> Result<Option<LlmConfig>, String> {
-    // Find .env.local next to the data/ directory (project root)
-    let env_path = {
-        let db = db_path();
-        // db is <project>/data/ai-hub.db → parent.parent = project root
-        db.parent()
-            .and_then(|data_dir| data_dir.parent())
-            .map(|root| root.join(".env.local"))
-            .unwrap_or_default()
-    };
+    let env_path = find_env_path().unwrap_or_default();
 
     if !env_path.exists() {
         return Ok(None);

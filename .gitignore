@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -47,10 +48,17 @@ next-env.d.ts
 
 # Build artifacts
 desktop/src-tauri/target/
-.playwright-mcp/
-*.png
-!public/*.png
-!desktop/public/*.png
-!desktop/src-tauri/icons/*.png
 desktop/node_modules/
 desktop/dist/
+.playwright-mcp/
+
+# Temp screenshots (keep docs/screenshots/)
+/hero-*.png
+/homepage-*.png
+/pipeline-*.png
+/chat-widget-*.png
+/logo-check.png
+/news-time-*.png
+/papers-time-*.png
+/providers-*.png
+/settings-*.png

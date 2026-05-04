@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const appWindow = getCurrentWindow();
@@ -58,8 +59,7 @@ export default function ChatWindow() {
     }
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(mentionQuery)}`);
-        const data = await res.json();
+        const data = await invoke<SearchItem[]>("search_content", { query: mentionQuery });
         setMentionResults(data);
         setMentionIdx(0);
       } catch { setMentionResults([]); }
@@ -129,56 +129,57 @@ export default function ChatWindow() {
     setLoading(true);
 
     try {
+      // Try streaming via WebUI first
       const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessages }),
-      });
+        signal: AbortSignal.timeout(5000),
+      }).catch(() => null);
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: res.status }));
-        setMessages((prev) => {
-          const copy = [...prev];
-          copy[copy.length - 1] = { role: "assistant", content: `错误: ${data.error || res.status}` };
-          return copy;
-        });
-        setLoading(false);
-        return;
-      }
-
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
-            try {
-              const json = JSON.parse(line.slice(6));
-              const delta = json.choices?.[0]?.delta?.content || json.delta?.text || "";
-              if (delta) {
-                setMessages((prev) => {
-                  const copy = [...prev];
-                  copy[copy.length - 1] = { role: "assistant", content: copy[copy.length - 1].content + delta };
-                  return copy;
-                });
-              }
-            } catch {}
+      if (res && res.ok) {
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+            for (const line of lines) {
+              if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
+              try {
+                const json = JSON.parse(line.slice(6));
+                const delta = json.choices?.[0]?.delta?.content || json.delta?.text || "";
+                if (delta) {
+                  setMessages((prev) => {
+                    const copy = [...prev];
+                    copy[copy.length - 1] = { role: "assistant", content: copy[copy.length - 1].content + delta };
+                    return copy;
+                  });
+                }
+              } catch {}
+            }
           }
         }
+      } else {
+        // Fallback: local Rust LLM call (non-streaming)
+        const reply = await invoke<string>("chat_with_llm", {
+          messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
+        });
+        setMessages((prev) => {
+          const copy = [...prev];
+          copy[copy.length - 1] = { role: "assistant", content: reply };
+          return copy;
+        });
       }
     } catch (e) {
       setMessages((prev) => {
         const copy = [...prev];
         if (copy[copy.length - 1].content === "") {
-          copy[copy.length - 1] = { role: "assistant", content: `错误: 无法连接到 AI Hub (${API_BASE})，请确保 WebUI 已启动` };
+          copy[copy.length - 1] = { role: "assistant", content: `错误: ${e}` };
         }
         return copy;
       });

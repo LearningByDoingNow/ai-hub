@@ -1,199 +1,190 @@
 <p align="center">
-  <img src="public/logo-transparent.png" alt="AI Hub" width="200" />
+  <img src="public/logo-transparent.png" alt="AI Hub" width="120" />
 </p>
 
 <h1 align="center">AI Hub</h1>
 
 <p align="center">
-  <strong>All-in-one AI Industry Intelligence Platform</strong>
+  <strong>AI-Powered Global Information Aggregation Platform</strong><br/>
+  <sub>AI 驱动的全球信息聚合平台 — 智能抓取、过滤、聚合，重要的事不错过</sub>
 </p>
 
 <p align="center">
-  Track AI companies, aggregate news, follow research papers, and chat with an AI assistant — all in one place.
-</p>
-
-<p align="center">
-  <a href="https://ai-hub-zeta-ten.vercel.app">Live Demo</a> &bull;
-  <a href="./README.zh-CN.md">中文文档</a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js" />
-  <img src="https://img.shields.io/badge/React-19-blue?logo=react" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#features">Features</a> •
+  <a href="#desktop-widget">Desktop Widget</a> •
+  <a href="docs/TECHNICAL.md">Tech Docs</a> •
+  <a href="docs/USER_GUIDE.md">User Guide</a> •
+  <a href="README.zh-CN.md">中文</a>
 </p>
 
 ---
 
-<p align="center">
-  <a href="https://ai-hub-zeta-ten.vercel.app">
-    <img src="docs/screenshots/home.png" alt="AI Hub Homepage" width="800" />
-  </a>
-</p>
+## What is AI Hub?
+
+AI Hub automatically aggregates content from **70+ premium global sources** across multiple domains — AI technology, academic papers, international affairs, and more. It features a modern WebUI and a native macOS desktop widget, both powered by the same data engine.
+
+**Two ways to use:**
+- **WebUI** — Full-featured web interface with search, settings, AI chat
+- **Desktop Widget** — Lightweight floating widget with real-time notifications
+
+Both share the same database and configuration. Use one or both.
 
 ---
 
 ## Features
 
-- **AI Provider Directory** — Browse 100+ AI companies with category/region filtering
-- **News Aggregation** — Auto-fetch from RSS feeds and web scraping with AI keyword filtering
-- **Paper Tracking** — Follow cutting-edge research from arXiv
-- **World Affairs** — Aggregate international news from major global media
-- **AI Chat Assistant** — Built-in chat with `@mention` article context
-- **Custom Modules** — Create personalized feed combinations
-- **Favorites** — Bookmark news and papers
-- **Full-text Search** — Search across all content types
-- **Data Pipeline** — Manual or scheduled (every 4h via GitHub Actions) fetching
-- **i18n** — Chinese and English interface
-- **Dark / Light Theme** — Automatic theme switching
+### Intelligent Aggregation Engine
+- **70+ curated data sources** — OpenAI, DeepMind, TechCrunch, BBC, Financial Times, arXiv, and more
+- **Smart filtering** — AI-relevance detection, 7-day freshness window, duplicate prevention
+- **Parallel fetching** — All sources fetched concurrently with 30s deadline, completes in ~8 seconds
+- **Configurable auto-fetch** — Set any interval (1min to hours), runs in background
 
-<details>
-<summary>More Screenshots</summary>
+### WebUI
+- **Dynamic homepage** — Live stats, module navigation with real-time counts
+- **Multi-module support** — AI News, Papers, World News, AI Products (custom modules supported)
+- **Full-text search** — Every module page has instant search
+- **AI Assistant** — Streaming chat with `@` article references, markdown rendering, platform guidance
+- **Precise timestamps** — Article publish time + relative time display
+- **Time-based card styling** — Fresher articles have more vivid styling
+- **Dark mode** — Full dark/light theme support
+- **Bilingual** — Chinese + English interface
 
-| News | Settings |
-|------|----------|
-| ![News](docs/screenshots/news.png) | Pipeline control, module management, data sources, LLM config |
+### Desktop Widget (macOS)
+- **Floating logo** — Always-on-top with orbital particles, rainbow aura, sparkle effects
+- **Real-time notifications** — New articles auto-popup as toast cards
+- **Card list** — Click logo to expand, click outside to collapse
+- **AI Chat** — Streaming with `@` article references (works with or without WebUI)
+- **Settings panel** — Configure LLM, fetch interval, trigger manual fetch
+- **Shared database** — Same data and config as WebUI
 
-</details>
+### AI Products Directory
+- **59 AI companies** — OpenAI, Anthropic, Google, Meta, NVIDIA, DeepSeek, Mistral, and more
+- **9 categories** — LLM, AI Assistant, AI Coding, AI Art, AI Video, AI Audio, AI Search, AI Infra, AI Robotics
+- **Direct links** — Official site, API console, documentation, playground
 
-## Tech Stack
+---
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript 5 |
-| UI | React 19 + Tailwind CSS 4 |
-| Database | SQLite (local) / Supabase (cloud) |
-| Data Pipeline | RSS Parser + Cheerio + arXiv API |
-| AI Chat | OpenAI-compatible API (OpenRouter, DeepSeek, etc.) |
-| Scheduling | GitHub Actions (every 4h) |
-| Deployment | Vercel |
-
-## Getting Started
+## Quick Start
 
 ### Prerequisites
-
-- Node.js >= 20
-- npm or pnpm
+- **Node.js** 18+ (recommend 20+)
+- **npm** 9+
 
 ### Installation
 
 ```bash
 git clone https://github.com/LearningByDoingNow/ai-hub.git
 cd ai-hub
-npm install
-node scripts/seed-sqlite.mjs   # Initialize database
-npm run dev                     # Start dev server
+npm install        # Installs deps + auto-initializes database with default sources
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Environment Variables
-
-Create a `.env.local` file:
-
-```env
-# LLM Configuration (required for AI chat)
-LLM_BASE_URL=https://openrouter.ai/api/v1
-LLM_API_KEY=your-api-key
-LLM_MODEL=deepseek/deepseek-chat-v3-0324:free
-
-# Optional: Supabase (for cloud deployment)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
-
-> **Note:** SQLite works out of the box locally. Supabase is only needed for cloud deployment (e.g., Vercel).
-
-### Data Fetching
+### Configure LLM (Optional, for AI Chat)
 
 ```bash
-npm run fetch          # Fetch news
-npm run fetch:papers   # Fetch papers
-npm run fetch:all      # Fetch everything
-npm run fetch:schedule # Scheduled fetching (every 4h)
+cp .env.example .env.local
+# Edit .env.local with your LLM API key
 ```
 
-## Deployment
+Supports any OpenAI-compatible API (OpenAI, ZhipuAI, DeepSeek, Ollama, etc.)
 
-### Vercel (Recommended)
+### Run
 
-1. Push to GitHub
-2. Import the repo on [vercel.com](https://vercel.com)
-3. Add env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-4. Deploy
+```bash
+npm run fetch:all  # First fetch — pulls data from all 70+ sources (~8 seconds)
+npm run dev        # Start WebUI at http://localhost:3000
+```
 
-> The app automatically uses Supabase when SQLite is not available (serverless environments).
+That's it! Open http://localhost:3000 to see your aggregated content.
 
-### Supabase Setup
+### Auto-fetch (Optional)
 
-1. Create a project on [supabase.com](https://supabase.com)
-2. Run `scripts/create-tables.sql` in the SQL editor
-3. Add Supabase credentials to environment variables
+Set up automatic fetching via:
+- **WebUI**: Settings → Data Fetching → Set interval
+- **Desktop Widget**: Settings → Set interval
+- **Cron job**: `npm run fetch:schedule` (runs every 4 hours)
+
+---
+
+## Desktop Widget
+
+### Build from Source (requires Rust)
+
+```bash
+# Install Rust if not already installed
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Build
+npm run desktop:install
+npm run desktop:build
+
+# The .app is at desktop/src-tauri/target/release/bundle/macos/AI Hub.app
+# The .dmg is at desktop/src-tauri/target/release/bundle/dmg/AI Hub_0.1.0_aarch64.dmg
+```
+
+### Install from DMG
+
+Download from [GitHub Releases](https://github.com/LearningByDoingNow/ai-hub/releases) and drag to Applications.
+
+> Note: DMG includes pre-bundled data (59 companies, 70+ sources). Fetching new data requires the project directory with Node.js.
+
+---
 
 ## Architecture
 
 ```
-src/
-├── app/                  # Pages & API routes (Next.js App Router)
-│   ├── api/              # RESTful API endpoints
-│   ├── news/             # News listing
-│   ├── papers/           # Papers listing
-│   ├── providers/        # AI provider directory
-│   ├── favorites/        # Bookmarked items
-│   ├── feed/[id]/        # Custom module feeds
-│   └── settings/         # Configuration dashboard
-├── components/           # React components
-├── lib/                  # Core logic (database, queries)
-├── i18n/                 # Internationalization (zh/en)
-└── types/                # TypeScript interfaces
-
-scripts/
-├── engine.mjs            # News fetching engine
-├── fetch-papers.mjs      # arXiv paper fetcher
-├── fetchers/             # Modular fetch strategies
-└── create-tables.sql     # Database schema
+ai-hub/
+├── src/                  # Next.js WebUI (App Router)
+│   ├── app/             # Pages + API routes
+│   ├── components/      # React components
+│   ├── lib/             # SQLite queries, utilities
+│   └── i18n/            # Bilingual translations
+├── desktop/              # Tauri Desktop Widget
+│   ├── src/             # React frontend
+│   └── src-tauri/       # Rust backend
+├── scripts/              # Data fetching engine
+│   ├── engine.mjs       # Main parallel fetcher
+│   ├── fetch-papers.mjs # arXiv paper fetcher
+│   └── fetchers/        # RSS, scrape, API strategies
+├── data/                 # SQLite database
+│   └── ai-hub.db        # Shared by WebUI + Desktop
+└── public/              # Static assets
 ```
 
 ### Data Flow
 
 ```
-RSS Feeds / Web / arXiv
-        │
-        ▼
-  Fetch Engine (scripts/)
-        │
-        ▼
-  SQLite (local) ──sync──▶ Supabase (cloud)
-        │                        │
-        ▼                        ▼
-  Dev Server              Vercel Production
+RSS/API Sources → engine.mjs (parallel fetch + filter)
+                       ↓
+              SQLite (data/ai-hub.db)
+                   ↙        ↘
+          Next.js WebUI    Tauri Desktop Widget
+              ↓                    ↓
+        Browser (SSR)     Native macOS Window
 ```
 
-## Available Scripts
+---
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
-| `npm run start` | Run production server |
-| `npm run lint` | Run ESLint |
-| `npm run fetch` | Fetch news once |
-| `npm run fetch:papers` | Fetch papers once |
-| `npm run fetch:all` | Fetch everything |
-| `npm run fetch:schedule` | Scheduled fetching (every 4h) |
+## Tech Stack
 
-## Contributing
+| Layer | Technology |
+|-------|-----------|
+| WebUI | Next.js 16, React 19, Tailwind CSS 4 |
+| Desktop | Tauri 2, Rust, React, Vite |
+| Database | SQLite (better-sqlite3) with WAL mode |
+| AI Chat | OpenAI-compatible API, SSE streaming |
+| Fetching | rss-parser, parallel with deadline |
+| Deploy | Vercel (WebUI), GitHub Releases (Desktop) |
 
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feat/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feat/amazing-feature`)
-5. Open a Pull Request
+---
+
+## Documentation
+
+- **[Technical Documentation](docs/TECHNICAL.md)** — Architecture deep-dive, database schema, API reference
+- **[User Guide](docs/USER_GUIDE.md)** — Feature walkthrough, configuration tips, FAQ
+
+---
 
 ## License
 
-[MIT License](LICENSE)
+[MIT](LICENSE)

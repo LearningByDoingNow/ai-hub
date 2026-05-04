@@ -119,6 +119,121 @@ fn load_position() -> Result<Option<(i32, i32)>, String> {
 }
 
 #[tauri::command]
+async fn open_settings_window(app: AppHandle) -> Result<(), String> {
+    if let Some(win) = app.get_webview_window("settings") {
+        win.show().map_err(|e| e.to_string())?;
+        win.set_focus().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+    WebviewWindowBuilder::new(&app, "settings", WebviewUrl::App("settings.html".into()))
+        .title("AI Hub Settings")
+        .inner_size(480.0, 560.0)
+        .decorations(false)
+        .transparent(true)
+        .center()
+        .build()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn save_llm_config(base_url: String, api_key: String, model: String, temperature: f64) -> Result<(), String> {
+    let env_path = db::find_env_path().ok_or("Cannot find .env.local")?;
+    let mut lines: Vec<String> = if env_path.exists() {
+        std::fs::read_to_string(&env_path).unwrap_or_default().lines().map(|l| l.to_string()).collect()
+    } else {
+        vec![]
+    };
+
+    let keys = ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL", "LLM_TEMPERATURE"];
+    let vals = [&base_url, &api_key, &model, &format!("{}", temperature)];
+    for (key, val) in keys.iter().zip(vals.iter()) {
+        let prefix = format!("{}=", key);
+        if let Some(pos) = lines.iter().position(|l| l.starts_with(&prefix)) {
+            lines[pos] = format!("{}={}", key, val);
+        } else {
+            lines.push(format!("{}={}", key, val));
+        }
+    }
+    std::fs::write(&env_path, lines.join("\n") + "\n").map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_config_value(key: String) -> Result<String, String> {
+    let env_path = db::find_env_path().ok_or("Cannot find .env.local")?;
+    if !env_path.exists() { return Ok(String::new()); }
+    let content = std::fs::read_to_string(&env_path).map_err(|e| e.to_string())?;
+    for line in content.lines() {
+        if let Some(val) = line.strip_prefix(&format!("{}=", key)) {
+            return Ok(val.to_string());
+        }
+    }
+    Ok(String::new())
+}
+
+#[tauri::command]
+fn save_config_value(key: String, value: String) -> Result<(), String> {
+    let env_path = db::find_env_path().ok_or("Cannot find .env.local")?;
+    let mut lines: Vec<String> = if env_path.exists() {
+        std::fs::read_to_string(&env_path).unwrap_or_default().lines().map(|l| l.to_string()).collect()
+    } else {
+        vec![]
+    };
+    let prefix = format!("{}=", key);
+    if let Some(pos) = lines.iter().position(|l| l.starts_with(&prefix)) {
+        lines[pos] = format!("{}={}", key, value);
+    } else {
+        lines.push(format!("{}={}", key, value));
+    }
+    std::fs::write(&env_path, lines.join("\n") + "\n").map_err(|e| e.to_string())
+}
+
+fn find_node() -> Option<std::path::PathBuf> {
+    let candidates = [
+        "/opt/homebrew/bin/node",
+        "/usr/local/bin/node",
+        "/usr/bin/node",
+    ];
+    for c in candidates {
+        let p = std::path::PathBuf::from(c);
+        if p.exists() { return Some(p); }
+    }
+    // Try PATH via which
+    std::process::Command::new("/usr/bin/which")
+        .arg("node")
+        .output()
+        .ok()
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .map(|s| std::path::PathBuf::from(s.trim()))
+        .filter(|p| p.exists())
+}
+
+#[tauri::command]
+async fn trigger_fetch() -> Result<String, String> {
+    let node = find_node().ok_or("Node.js not found. Please install Node.js.")?;
+    let project_root = db::find_project_root().ok_or("Cannot find project root")?;
+    let engine = project_root.join("scripts").join("engine.mjs");
+    if !engine.exists() {
+        return Err(format!("engine.mjs not found at {:?}", engine));
+    }
+    let output = tokio::process::Command::new(&node)
+        .arg(&engine)
+        .arg("once")
+        .current_dir(&project_root)
+        .output()
+        .await
+        .map_err(|e| e.to_string())?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let last_line = stdout.lines().rev().find(|l| l.contains("Done")).unwrap_or("Fetch completed");
+    Ok(last_line.to_string())
+}
+
+#[tauri::command]
+fn search_content(query: String) -> Result<Vec<serde_json::Value>, String> {
+    db::search_news_papers(&query)
+}
+
+#[tauri::command]
 async fn resize_widget(app: AppHandle, width: f64, height: f64) -> Result<(), String> {
     if let Some(win) = app.get_webview_window("widget") {
         win.set_size(LogicalSize::new(width, height))
@@ -159,12 +274,42 @@ fn epoch_days_to_ymd(days: i64) -> (i64, i64, i64) {
     (y, m, d)
 }
 
+fn get_fetch_interval_secs() -> u64 {
+    let env_path = db::find_env_path().unwrap_or_default();
+    if !env_path.exists() { return 0; }
+    let content = std::fs::read_to_string(&env_path).unwrap_or_default();
+    for line in content.lines() {
+        if let Some(val) = line.strip_prefix("FETCH_INTERVAL_MIN=") {
+            return val.trim().parse::<u64>().unwrap_or(0) * 60;
+        }
+    }
+    0
+}
+
 fn start_background_poller(app: AppHandle) {
     let handle = app.clone();
     tauri::async_runtime::spawn(async move {
         let state = handle.state::<LastCheck>();
+        let mut last_fetch_time = std::time::Instant::now();
         loop {
             tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
+
+            // Auto-fetch based on configured interval
+            let interval = get_fetch_interval_secs();
+            if interval > 0 && last_fetch_time.elapsed().as_secs() >= interval {
+                last_fetch_time = std::time::Instant::now();
+                if let (Some(node), Some(root)) = (find_node(), db::find_project_root()) {
+                    let engine = root.join("scripts").join("engine.mjs");
+                    if engine.exists() {
+                        let _ = tokio::process::Command::new(&node)
+                            .arg(&engine)
+                            .arg("once")
+                            .current_dir(&root)
+                            .output()
+                            .await;
+                    }
+                }
+            }
 
             let since = {
                 let lock = state.0.lock().unwrap();
@@ -236,9 +381,15 @@ pub fn run() {
             chat_with_llm,
             open_in_browser,
             open_chat_window,
+            open_settings_window,
             resize_widget,
             save_position,
             load_position,
+            save_llm_config,
+            get_config_value,
+            save_config_value,
+            trigger_fetch,
+            search_content,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

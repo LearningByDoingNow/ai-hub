@@ -1,17 +1,45 @@
 "use client";
 
+import { useMemo } from "react";
 import type { NewsItem } from "@/types";
 import { useLocale } from "@/i18n/context";
 import FavoriteButton from "./FavoriteButton";
 import { formatPublishTime, formatFullDate } from "@/lib/timeAgo";
 
+function getFreshness(dateStr?: string): number {
+  if (!dateStr) return 0;
+  let d: Date;
+  if (dateStr.includes("T")) d = new Date(dateStr);
+  else if (dateStr.includes(" ")) d = new Date(dateStr.replace(" ", "T") + "Z");
+  else d = new Date(dateStr + "T00:00:00");
+  if (isNaN(d.getTime())) return 0;
+  const hours = (Date.now() - d.getTime()) / 3600000;
+  if (hours < 1) return 1;
+  if (hours < 3) return 0.7;
+  if (hours < 6) return 0.5;
+  if (hours < 12) return 0.3;
+  if (hours < 24) return 0.15;
+  return 0;
+}
+
 export default function NewsCard({ item }: { item: NewsItem }) {
   const { locale, t } = useLocale();
   const title = locale === "en" ? (item.titleEn || item.title) : item.title;
   const summary = locale === "en" ? (item.summaryEn || item.summary) : item.summary;
+  const freshness = useMemo(() => getFreshness(item.createdAt || item.date), [item.createdAt, item.date]);
+
+  const cardBg = freshness >= 0.8
+    ? "bg-blue-50/80 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800/50"
+    : freshness >= 0.5
+      ? "bg-blue-50/40 border-blue-100 dark:bg-blue-950/15 dark:border-blue-900/30"
+      : freshness >= 0.2
+        ? "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
+        : "bg-white border-slate-200 dark:bg-slate-800/30 dark:border-slate-700/50";
 
   return (
-    <div className="group relative rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-blue-200 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-blue-700">
+    <div
+      className={`group relative rounded-xl border p-5 shadow-sm transition-all hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 ${cardBg}`}
+    >
       <div className="absolute top-3 right-3">
         <FavoriteButton item={{ id: item.id, type: "news", title: item.title, url: item.url }} />
       </div>
