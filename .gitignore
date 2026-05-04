@@ -52,6 +52,9 @@ desktop/node_modules/
 desktop/dist/
 .playwright-mcp/
 
+# Generated data (rebuilt by CI)
+public/data/
+
 # Temp screenshots (keep docs/screenshots/)
 /hero-*.png
 /homepage-*.png

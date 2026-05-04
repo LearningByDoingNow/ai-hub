@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Hub - Online Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .tab-active { border-bottom: 2px solid #3b82f6; color: #1e40af; font-weight: 600; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <img src="logo-widget.png" alt="AI Hub" class="h-10" />
+        <span class="text-xl font-bold text-slate-900">AI Hub</span>
+        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-2">Online Preview</span>
+      </div>
+      <div class="flex items-center gap-3 text-sm text-slate-500">
+        <span id="stats-info"></span>
+        <a href="https://github.com/LearningByDoingNow/ai-hub" target="_blank" class="text-blue-600 hover:underline">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="max-w-6xl mx-auto px-4 pt-4">
+    <div class="flex gap-4 border-b border-slate-200 mb-6">
+      <button onclick="switchTab('news')" id="tab-news" class="pb-2 px-1 text-sm tab-active">AI 资讯</button>
+      <button onclick="switchTab('papers')" id="tab-papers" class="pb-2 px-1 text-sm text-slate-500 hover:text-slate-700">论文追踪</button>
+      <button onclick="switchTab('providers')" id="tab-providers" class="pb-2 px-1 text-sm text-slate-500 hover:text-slate-700">AI 产品</button>
+    </div>
+
+    <!-- Search -->
+    <div class="mb-6">
+      <input type="text" id="search" placeholder="搜索..." oninput="filterItems()"
+        class="w-full max-w-md rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-blue-400" />
+    </div>
+
+    <!-- Content -->
+    <div id="content" class="space-y-3 pb-12"></div>
+  </div>
+
+  <script>
+    let allData = { news: [], papers: [], providers: [] };
+    let currentTab = 'news';
+
+    async function loadData() {
+      const [news, papers, providers, stats] = await Promise.all([
+        fetch('data/news.json').then(r => r.json()).catch(() => []),
+        fetch('data/papers.json').then(r => r.json()).catch(() => []),
+        fetch('data/providers.json').then(r => r.json()).catch(() => []),
+        fetch('data/stats.json').then(r => r.json()).catch(() => ({})),
+      ]);
+      allData = { news, papers, providers };
+      document.getElementById('stats-info').textContent =
+        `${stats.news || 0} 篇资讯 · ${stats.papers || 0} 篇论文 · ${stats.providers || 0} 家公司 · 更新于 ${stats.updatedAt?.slice(0, 16).replace('T', ' ') || 'N/A'}`;
+      render();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('[id^="tab-"]').forEach(el => {
+        el.className = 'pb-2 px-1 text-sm text-slate-500 hover:text-slate-700';
+      });
+      document.getElementById('tab-' + tab).className = 'pb-2 px-1 text-sm tab-active';
+      document.getElementById('search').value = '';
+      render();
+    }
+
+    function filterItems() {
+      render();
+    }
+
+    function timeAgo(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      const diff = Date.now() - d.getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 1) return '刚刚';
+      if (m < 60) return m + '分钟前';
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + '小时前';
+      const days = Math.floor(h / 24);
+      if (days < 7) return days + '天前';
+      return dateStr.slice(0, 10);
+    }
+
+    function render() {
+      const query = document.getElementById('search').value.toLowerCase();
+      const container = document.getElementById('content');
+      let html = '';
+
+      if (currentTab === 'news') {
+        const items = allData.news.filter(n =>
+          !query || n.title.toLowerCase().includes(query) || (n.source || '').toLowerCase().includes(query)
+        ).slice(0, 50);
+        html = items.map(n => `
+          <a href="${n.url}" target="_blank" class="block rounded-xl border border-slate-200 bg-white p-4 hover:shadow-md hover:border-blue-200 transition-all">
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">${n.source}</span>
+              <span class="text-xs text-slate-400">${timeAgo(n.created_at || n.date)}</span>
+              <span class="text-xs text-slate-300 ml-auto">${n.date?.slice(0, 19).replace('T', ' ') || ''}</span>
+            </div>
+            <h3 class="font-semibold text-slate-900 mb-1">${n.title}</h3>
+            <p class="text-sm text-slate-500 line-clamp-2">${n.summary || n.summary_en || ''}</p>
+          </a>
+        `).join('');
+      } else if (currentTab === 'papers') {
+        const items = allData.papers.filter(p =>
+          !query || p.title.toLowerCase().includes(query)
+        ).slice(0, 30);
+        html = items.map(p => {
+          const authors = JSON.parse(p.authors || '[]').slice(0, 3).join(', ');
+          const links = JSON.parse(p.links || '[]');
+          return `
+            <div class="rounded-xl border border-slate-200 bg-white p-4">
+              <div class="flex items-center gap-2 mb-1.5">
+                <span class="text-xs font-semibold text-violet-700 bg-violet-50 px-2 py-0.5 rounded">${p.venue}</span>
+                <span class="text-xs text-slate-400">${p.date?.slice(0, 10) || ''}</span>
+              </div>
+              <h3 class="font-semibold text-slate-900 mb-1">${p.title}</h3>
+              <p class="text-xs text-slate-400 mb-2">${authors}</p>
+              <p class="text-sm text-slate-500 line-clamp-3">${p.abstract || ''}</p>
+              ${links.length ? `<div class="mt-2 flex gap-2">${links.map(l => `<a href="${l.url || l}" target="_blank" class="text-xs text-blue-600 hover:underline">${l.label || 'Link'} ↗</a>`).join('')}</div>` : ''}
+            </div>
+          `;
+        }).join('');
+      } else if (currentTab === 'providers') {
+        const items = allData.providers.filter(p =>
+          !query || p.name.toLowerCase().includes(query) || (p.category || '').toLowerCase().includes(query)
+        );
+        html = items.map(p => {
+          const tags = JSON.parse(p.tags || '[]');
+          const links = JSON.parse(p.links || '[]');
+          return `
+            <div class="rounded-xl border border-slate-200 bg-white p-4">
+              <div class="flex items-center justify-between mb-1">
+                <h3 class="font-semibold text-slate-900">${p.name}</h3>
+                <span class="text-xs text-slate-400">${p.country}</span>
+              </div>
+              <p class="text-sm text-slate-500 mb-2">${p.description}</p>
+              <div class="flex flex-wrap gap-1.5 mb-2">
+                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">${p.category}</span>
+                ${tags.slice(0, 4).map(t => `<span class="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded">${t}</span>`).join('')}
+              </div>
+              <div class="flex flex-wrap gap-2">
+                ${links.map(l => `<a href="${l.url}" target="_blank" class="text-xs text-blue-600 hover:underline">${l.label} ↗</a>`).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      container.innerHTML = html || '<p class="text-center text-slate-400 py-12">暂无数据</p>';
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

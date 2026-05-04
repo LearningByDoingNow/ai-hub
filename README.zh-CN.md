@@ -8,6 +8,7 @@
 </p>
 
 <p align="center">
+  <a href="https://learningbydoingnow.github.io/ai-hub/">在线预览</a> |
   <a href="#快速开始">快速开始</a> |
   <a href="#核心功能">功能介绍</a> |
   <a href="#桌面组件">桌面组件</a> |

@@ -8,6 +8,7 @@
 </p>
 
 <p align="center">
+  <a href="https://learningbydoingnow.github.io/ai-hub/">Live Preview</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#features">Features</a> •
   <a href="#desktop-widget">Desktop Widget</a> •

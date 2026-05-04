@@ -1,0 +1,49 @@
+name: Deploy Preview to GitHub Pages
+
+on:
+  schedule:
+    - cron: '17 */2 * * *'  # Every 2 hours
+  workflow_dispatch:  # Manual trigger
+  push:
+    branches: [master]
+    paths: ['scripts/**', 'preview/**']
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --omit=dev
+
+      - name: Fetch latest data
+        run: npm run fetch:all
+        continue-on-error: true
+
+      - name: Export data to JSON
+        run: node scripts/export-json.mjs
+
+      - name: Build preview site
+        run: |
+          mkdir -p preview-dist
+          cp preview/index.html preview-dist/
+          cp -r public/data preview-dist/data
+          cp public/logo-widget.png preview-dist/
+          cp public/logo-transparent.png preview-dist/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./preview-dist
