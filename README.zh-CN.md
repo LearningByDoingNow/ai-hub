@@ -181,6 +181,14 @@ npm run desktop:build
 
 从 [GitHub Releases](https://github.com/LearningByDoingNow/ai-hub/releases) 下载，拖入应用程序即可。
 
+> **macOS 安全提示：** 如果提示"AI Hub 已损坏，无法打开"，在终端执行：
+> ```bash
+> xattr -cr /Applications/AI\ Hub.app
+> ```
+> 这是未签名应用的正常现象，需要 Apple 开发者证书（$99/年）才能避免。
+
+> **DMG 功能限制：** 独立安装包自带预装数据（59 家公司、70+ 数据源、200+ 篇资讯），可直接查看和 AI 对话。但**无法抓取新数据**（需要完整项目目录 + Node.js）。如需完整功能请 clone 仓库使用。
+
 ---
 
 ## 技术栈

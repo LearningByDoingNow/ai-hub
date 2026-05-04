@@ -200,7 +200,13 @@ npm run desktop:build
 
 Download from [GitHub Releases](https://github.com/LearningByDoingNow/ai-hub/releases) and drag to Applications.
 
-> Note: DMG includes pre-bundled data (59 companies, 70+ sources). Fetching new data requires the project directory with Node.js.
+> **macOS Security Warning:** If you see "AI Hub is damaged and can't be opened", run:
+> ```bash
+> xattr -cr /Applications/AI\ Hub.app
+> ```
+> This is normal for unsigned apps. An Apple Developer certificate ($99/year) is needed to avoid this.
+
+> **DMG Limitations:** The standalone DMG includes pre-bundled data (59 companies, 70+ sources, 200+ articles) for immediate viewing and AI chat. However, **fetching new data is not available** without the full project directory + Node.js. For full functionality including auto-fetch, clone the repository instead.
 
 ---
 
