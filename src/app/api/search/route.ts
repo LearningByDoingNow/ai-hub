@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as sqlite from "@/lib/sqlite";
 
+const CORS = { "Access-Control-Allow-Origin": "*" };
+
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.toLowerCase() || "";
-  if (q.length < 1) return NextResponse.json([]);
+  if (q.length < 1) return NextResponse.json([], { headers: CORS });
 
   const news = sqlite.getNews().filter((n) =>
     n.title.toLowerCase().includes(q) || n.titleEn.toLowerCase().includes(q)
@@ -19,5 +21,5 @@ export async function GET(req: NextRequest) {
     date: p.date, summary: p.abstract, url: p.links[0]?.url || "",
   }));
 
-  return NextResponse.json([...news, ...papers].slice(0, 10));
+  return NextResponse.json([...news, ...papers].slice(0, 10), { headers: CORS });
 }

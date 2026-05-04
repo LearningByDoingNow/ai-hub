@@ -66,6 +66,58 @@ export async function getPapers(limit?: number): Promise<Paper[]> {
   return sqlite.getPapers(limit);
 }
 
+export interface HeroStat {
+  id: string;
+  name: string;
+  nameEn: string;
+  icon: string;
+  count: number;
+  href: string;
+}
+
+export async function getHeroStats(): Promise<{ modules: HeroStat[]; sources: number }> {
+  if (useSupabase) {
+    const { createServerSupabase } = await import("./supabase/server");
+    const supabase = await createServerSupabase();
+    const [mods, n, p, prov, s] = await Promise.all([
+      supabase.from("modules").select("*").order("sort_order", { ascending: true }),
+      supabase.from("news").select("*", { count: "exact", head: true }),
+      supabase.from("papers").select("*", { count: "exact", head: true }),
+      supabase.from("providers").select("*", { count: "exact", head: true }),
+      supabase.from("sources").select("*", { count: "exact", head: true }).eq("enabled", true),
+    ]);
+    const countMap: Record<string, number> = {
+      providers: prov.count || 0, news: n.count || 0, papers: p.count || 0,
+    };
+    const hrefMap: Record<string, string> = { providers: "/providers", news: "/news", papers: "/papers" };
+    const modules = (mods.data || []).map((m: Record<string, unknown>) => ({
+      id: m.id as string, name: m.name as string, nameEn: m.name_en as string,
+      icon: m.icon as string, count: countMap[m.id as string] || 0,
+      href: hrefMap[m.id as string] || `/feed/${m.id}`,
+    }));
+    return { modules, sources: s.count || 0 };
+  }
+
+  const sqlite = await import("./sqlite");
+  return sqlite.getHeroStats();
+}
+
+export async function getCounts(): Promise<{ news: number; papers: number; sources: number }> {
+  if (useSupabase) {
+    const { createServerSupabase } = await import("./supabase/server");
+    const supabase = await createServerSupabase();
+    const [n, p, s] = await Promise.all([
+      supabase.from("news").select("*", { count: "exact", head: true }),
+      supabase.from("papers").select("*", { count: "exact", head: true }),
+      supabase.from("sources").select("*", { count: "exact", head: true }).eq("enabled", true),
+    ]);
+    return { news: n.count || 0, papers: p.count || 0, sources: s.count || 0 };
+  }
+
+  const sqlite = await import("./sqlite");
+  return sqlite.getCounts();
+}
+
 // Supabase returns snake_case, map to camelCase
 function mapSupabaseProvider(row: Record<string, unknown>): Provider {
   return {
@@ -86,6 +138,7 @@ function mapSupabaseNews(row: Record<string, unknown>): NewsItem {
     titleEn: row.title_en as string,
     source: row.source as string,
     date: row.date as string,
+    createdAt: row.created_at as string,
     summary: row.summary as string,
     summaryEn: row.summary_en as string,
     url: row.url as string,

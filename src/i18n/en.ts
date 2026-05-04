@@ -4,13 +4,7 @@ export const en: Record<string, string> = {
   "nav.news": "News",
   "nav.papers": "Papers",
 
-  // Hero
-  "hero.title": "Discover the World's Best AI Products",
-  "hero.subtitle": "Your one-stop hub for AI products, latest news, and cutting-edge research",
-  "hero.cta": "Browse Products",
-  "hero.providers": "Providers",
-  "hero.news": "News & Insights",
-  "hero.papers": "Research Papers",
+  // Hero (kept for reference, HeroSection uses dynamic module data now)
 
   // Filter
   "filter.all": "All",

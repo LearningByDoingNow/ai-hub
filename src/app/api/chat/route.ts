@@ -20,36 +20,50 @@ function getEnv(key: string): string {
 function normalizeUrl(baseUrl: string) {
   const url = baseUrl.replace(/\/+$/, "");
   if (url.includes("anthropic.com")) {
-    return { chatUrl: url.replace(/\/v1$/, "") + "/v1/messages", format: "anthropic" as const };
+    return { chatUrl: url.replace(/\/v1$/, "") + "/v1/messages", fallbackUrl: "", format: "anthropic" as const };
   }
-  if (url.endsWith("/chat/completions")) return { chatUrl: url, format: "openai" as const };
-  if (url.endsWith("/v1")) return { chatUrl: url + "/chat/completions", format: "openai" as const };
-  return { chatUrl: url + "/v1/chat/completions", format: "openai" as const };
+  if (url.endsWith("/chat/completions")) return { chatUrl: url, fallbackUrl: "", format: "openai" as const };
+  if (url.endsWith("/v1")) return { chatUrl: url + "/chat/completions", fallbackUrl: "", format: "openai" as const };
+  return { chatUrl: url + "/v1/chat/completions", fallbackUrl: url + "/chat/completions", format: "openai" as const };
 }
 
-const SYSTEM_PROMPT = `You are AI Hub Assistant, a helpful AI embedded in the AI Hub platform.
+const SYSTEM_PROMPT = `You are AI Hub Assistant, a smart and versatile AI embedded in the AI Hub platform — an AI-powered information aggregation platform covering multiple domains.
+
+## About AI Hub
+AI Hub aggregates content from 70+ global sources across multiple modules:
+- AI 资讯: AI industry news, product launches, technology breakthroughs
+- 论文追踪: Academic papers from arXiv and research blogs
+- 国际时政: World news from Financial Times, BBC, NYT, Al Jazeera, etc.
+- AI 产品导航: Directory of 50+ AI companies and products
+Users can also create custom modules and add their own RSS sources.
+
+## Your Role
+You are a GENERAL-PURPOSE assistant for this platform. When users ask about "news" or "hot topics", consider ALL modules and all content — not just AI. Only focus on AI if the user specifically asks about AI.
 
 ## Your Capabilities
-- Answer questions about AI news, papers, and products
+- Answer questions about ANY topic covered by the platform (tech, world affairs, research, etc.)
 - Summarize and analyze articles when user references them with @
-- Help users discover content and recommend relevant items
-- Help users manage data: create modules, add/edit/delete providers, sources, etc.
-- Help users add favorites, search articles, trigger data fetching
-- Provide AI industry insights and trend analysis
+- Help users discover content across all modules
+- Help users manage the platform: create modules, add/edit/delete providers, sources, etc.
+- Recommend RSS sources for any topic users are interested in
+- Explain what AI Hub can do and guide users to features
+- Trigger data fetching, manage favorites, search articles
 
-## What You CAN Do
-- Read, create, update, delete DATA: providers, news, papers, sources, modules, favorites
-- Analyze and summarize article content
-- Recommend RSS sources for topics users are interested in
-- Answer any questions about AI industry, models, companies
+## Platform Features You Can Tell Users About
+- @ reference: Type @ in chat to search and attach articles for analysis
+- Custom modules: Users can create topic-based modules in Settings
+- RSS sources: Add any RSS feed URL as a data source
+- Auto-fetch: Set a timer in Settings to auto-update periodically
+- Desktop widget: A companion desktop app that shows notifications
+- Search: Every module page has search functionality
+- Favorites: Save articles for later reading
 
 ## What You MUST NOT Do
-- Modify project source code, framework code, or any .ts/.tsx/.js/.css files
-- Modify system configuration or .env files
-- Execute shell commands or access the file system
-- If asked to modify code, politely explain you can only help with data operations
+- Modify source code or system configuration
+- Make up news or information not in the database
+- Default to AI-only content when user asks general questions
 
-Respond in the same language as the user's message. Keep responses concise and helpful.`;
+Respond in the same language as the user's message. Be concise, helpful, and cover all relevant modules.`;
 
 function fetchArticleContent(url: string): string {
   if (!url || url.includes("example.com")) return "";
@@ -75,6 +89,12 @@ function fetchArticleContent(url: string): string {
   }
 }
 
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" };
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS });
+}
+
 export async function POST(req: NextRequest) {
   const { messages } = await req.json();
 
@@ -83,7 +103,7 @@ export async function POST(req: NextRequest) {
   const model = getEnv("LLM_MODEL");
 
   if (!apiKey || !baseUrl) {
-    return new Response(JSON.stringify({ error: "LLM not configured" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "LLM not configured" }), { status: 400, headers: CORS });
   }
 
   // If last user message contains article URLs, fetch their content
@@ -103,8 +123,10 @@ export async function POST(req: NextRequest) {
 
   const newsCount = sqlite.getNews().length;
   const papersCount = sqlite.getPapers().length;
-  const systemWithContext = SYSTEM_PROMPT + `\n\nCurrent: ${newsCount} news, ${papersCount} papers.`;
-  const { chatUrl, format } = normalizeUrl(baseUrl);
+  const modules = sqlite.getModules();
+  const moduleList = modules.map((m) => `${m.name}(${m.nameEn})`).join(", ");
+  const systemWithContext = SYSTEM_PROMPT + `\n\nCurrent data: ${newsCount} news articles, ${papersCount} papers. Active modules: ${moduleList}.`;
+  const { chatUrl, fallbackUrl, format } = normalizeUrl(baseUrl);
 
   if (format === "anthropic") {
     const res = await fetch(chatUrl, {
@@ -116,21 +138,24 @@ export async function POST(req: NextRequest) {
         max_tokens: 2000, temperature: 0.5,
       }),
     });
-    if (!res.ok) return new Response(JSON.stringify({ error: `LLM ${res.status}` }), { status: 500 });
-    return new Response(res.body, { headers: { "Content-Type": "text/event-stream" } });
+    if (!res.ok) return new Response(JSON.stringify({ error: `LLM ${res.status}` }), { status: 500, headers: CORS });
+    return new Response(res.body, { headers: { "Content-Type": "text/event-stream", "Access-Control-Allow-Origin": "*" } });
   }
 
-  // OpenAI compatible streaming
-  const res = await fetch(chatUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model, stream: true,
-      messages: [{ role: "system", content: systemWithContext }, ...messages],
-      max_tokens: 2000, temperature: 0.5,
-    }),
+  // OpenAI compatible streaming (with fallback for providers like GLM)
+  const body = JSON.stringify({
+    model, stream: true,
+    messages: [{ role: "system", content: systemWithContext }, ...messages],
+    max_tokens: 2000, temperature: 0.5,
   });
+  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` };
 
-  if (!res.ok) return new Response(JSON.stringify({ error: `LLM ${res.status}` }), { status: 500 });
-  return new Response(res.body, { headers: { "Content-Type": "text/event-stream" } });
+  let res = await fetch(chatUrl, { method: "POST", headers, body });
+
+  if (!res.ok && res.status === 404 && fallbackUrl) {
+    res = await fetch(fallbackUrl, { method: "POST", headers, body });
+  }
+
+  if (!res.ok) return new Response(JSON.stringify({ error: `LLM ${res.status}` }), { status: 500, headers: CORS });
+  return new Response(res.body, { headers: { "Content-Type": "text/event-stream", "Access-Control-Allow-Origin": "*" } });
 }

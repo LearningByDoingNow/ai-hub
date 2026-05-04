@@ -3,6 +3,17 @@ import { execFile } from "child_process";
 import path from "path";
 import { existsSync } from "fs";
 
+let running: string | null = null;
+
+function runInBackground(script: string, args: string[] = []) {
+  const cwd = process.cwd();
+  return new Promise<void>((resolve) => {
+    execFile("node", [path.join(cwd, script), ...args], { timeout: 180000 }, () => {
+      resolve();
+    });
+  });
+}
+
 export async function POST(req: NextRequest) {
   const sqliteExists = existsSync(path.join(process.cwd(), "data", "ai-hub.db"));
   if (!sqliteExists) {
@@ -14,34 +25,30 @@ export async function POST(req: NextRequest) {
 
   const { task } = await req.json();
 
-  const scripts: Record<string, string> = {
-    news: "scripts/engine.mjs",
-    papers: "scripts/fetch-papers.mjs",
-    all: "scripts/engine.mjs",
-  };
-
-  const script = scripts[task];
-  if (!script) {
+  const validTasks = ["news", "papers", "all"];
+  if (!validTasks.includes(task)) {
     return NextResponse.json({ error: "Invalid task" }, { status: 400 });
   }
 
-  const scriptPath = path.join(process.cwd(), script);
+  if (running) {
+    return NextResponse.json({ ok: true, status: "already_running", task: running });
+  }
 
-  return new Promise<NextResponse>((resolve) => {
-    const args = task === "all" ? [scriptPath, "once"] : [scriptPath];
-    execFile("node", args, { timeout: 120000 }, (error, stdout, stderr) => {
-      if (error) {
-        resolve(NextResponse.json({
-          ok: false,
-          error: error.message,
-          output: stderr || stdout,
-        }));
-      } else {
-        resolve(NextResponse.json({
-          ok: true,
-          output: stdout,
-        }));
-      }
-    });
-  });
+  running = task;
+
+  const jobs: Promise<void>[] = [];
+  if (task === "all" || task === "news") {
+    jobs.push(runInBackground("scripts/engine.mjs", ["once"]));
+  }
+  if (task === "all" || task === "papers") {
+    jobs.push(runInBackground("scripts/fetch-papers.mjs"));
+  }
+
+  Promise.all(jobs).finally(() => { running = null; });
+
+  return NextResponse.json({ ok: true, status: "started", task });
+}
+
+export async function GET() {
+  return NextResponse.json({ running });
 }

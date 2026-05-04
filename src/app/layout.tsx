@@ -5,6 +5,7 @@ import { LocaleProvider } from "@/i18n/context";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
+import AutoFetch from "@/components/AutoFetch";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +42,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <ChatWidget />
+          <AutoFetch />
         </LocaleProvider>
       </body>
     </html>

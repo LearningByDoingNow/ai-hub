@@ -130,10 +130,13 @@ async function main() {
   const total = db.prepare("SELECT COUNT(*) as c FROM papers").get();
   console.log(`\n✓ Done! ${added} new papers. Total: ${total.c}`);
 
+  db.pragma("wal_checkpoint(TRUNCATE)");
   db.close();
 }
 
-main().catch((e) => {
+main().then(() => {
+  process.exit(0);
+}).catch((e) => {
   console.error("Error:", e.message);
   process.exit(1);
 });

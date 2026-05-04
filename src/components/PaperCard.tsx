@@ -3,6 +3,7 @@
 import type { Paper } from "@/types";
 import { useLocale } from "@/i18n/context";
 import FavoriteButton from "./FavoriteButton";
+import { formatPublishTime } from "@/lib/timeAgo";
 
 export default function PaperCard({ paper }: { paper: Paper }) {
   const { locale } = useLocale();
@@ -19,7 +20,7 @@ export default function PaperCard({ paper }: { paper: Paper }) {
         <span className="inline-flex items-center rounded-md bg-violet-50 px-2 py-0.5 text-xs font-semibold text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-900/30 dark:text-violet-300 dark:ring-violet-800">
           {paper.venue}
         </span>
-        <time className="text-xs text-slate-400 dark:text-slate-500">{paper.date}</time>
+        <time className="text-xs text-slate-400 dark:text-slate-500" title={paper.date}>{formatPublishTime(paper.date, locale)}</time>
       </div>
 
       <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-1.5">

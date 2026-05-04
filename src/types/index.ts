@@ -19,6 +19,7 @@ export interface NewsItem {
   titleEn: string;
   source: string;
   date: string;
+  createdAt?: string;
   summary: string;
   summaryEn: string;
   url: string;

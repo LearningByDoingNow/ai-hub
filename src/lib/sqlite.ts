@@ -23,15 +23,11 @@ export interface Source {
 
 const DB_PATH = path.join(process.cwd(), "data", "ai-hub.db");
 
-let _db: Database.Database | null = null;
-
 function getDb(): Database.Database {
-  if (!_db) {
-    _db = new Database(DB_PATH);
-    _db.pragma("journal_mode = WAL");
-    initTables(_db);
-  }
-  return _db;
+  const db = new Database(DB_PATH, { readonly: false });
+  db.pragma("journal_mode = WAL");
+  initTables(db);
+  return db;
 }
 
 function initTables(db: Database.Database) {
@@ -94,8 +90,8 @@ function mapProvider(row: Record<string, unknown>): Provider {
 function mapNews(row: Record<string, unknown>): NewsItem {
   return {
     id: row.id as string, title: row.title as string, titleEn: row.title_en as string,
-    source: row.source as string, date: row.date as string, summary: row.summary as string,
-    summaryEn: row.summary_en as string, url: row.url as string,
+    source: row.source as string, date: row.date as string, createdAt: row.created_at as string,
+    summary: row.summary as string, summaryEn: row.summary_en as string, url: row.url as string,
   };
 }
 
@@ -122,6 +118,37 @@ export function getPapers(limit?: number): Paper[] {
   const db = getDb();
   if (limit) return db.prepare("SELECT * FROM papers ORDER BY created_at DESC LIMIT ?").all(limit).map((r) => mapPaper(r as Record<string, unknown>));
   return db.prepare("SELECT * FROM papers ORDER BY created_at DESC").all().map((r) => mapPaper(r as Record<string, unknown>));
+}
+
+export function getHeroStats(): { modules: { id: string; name: string; nameEn: string; icon: string; count: number; href: string }[]; sources: number } {
+  const db = getDb();
+  const modules = db.prepare("SELECT * FROM modules ORDER BY sort_order ASC").all().map((row) => {
+    const r = row as Record<string, unknown>;
+    const id = r.id as string;
+    const hrefMap: Record<string, string> = { providers: "/providers", news: "/news", papers: "/papers" };
+    const tableMap: Record<string, string> = { providers: "providers", news: "news", papers: "papers" };
+    const table = tableMap[id];
+    let count = 0;
+    if (table) {
+      count = (db.prepare(`SELECT COUNT(*) as c FROM ${table}`).get() as { c: number }).c;
+    } else {
+      count = (db.prepare("SELECT COUNT(*) as c FROM news WHERE source IN (SELECT name FROM sources WHERE module = ?)").get(id) as { c: number }).c;
+    }
+    return {
+      id, name: r.name as string, nameEn: r.name_en as string,
+      icon: r.icon as string, count, href: hrefMap[id] || `/feed/${id}`,
+    };
+  });
+  const sources = (db.prepare("SELECT COUNT(*) as c FROM sources WHERE enabled = 1").get() as { c: number }).c;
+  return { modules, sources };
+}
+
+export function getCounts(): { news: number; papers: number; sources: number } {
+  const db = getDb();
+  const news = (db.prepare("SELECT COUNT(*) as c FROM news").get() as { c: number }).c;
+  const papers = (db.prepare("SELECT COUNT(*) as c FROM papers").get() as { c: number }).c;
+  const sources = (db.prepare("SELECT COUNT(*) as c FROM sources WHERE enabled = 1").get() as { c: number }).c;
+  return { news, papers, sources };
 }
 
 export function getSources(): Source[] {

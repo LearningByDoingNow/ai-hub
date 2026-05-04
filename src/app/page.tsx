@@ -1,13 +1,14 @@
-import { getProviders, getNews, getPapers } from "@/lib/queries";
+import { getProviders, getNews, getPapers, getHeroStats } from "@/lib/queries";
 import HomeClient from "./HomeClient";
 
 const featuredIds = ["openai", "anthropic", "deepseek", "google", "mistral", "alibaba"];
 
 export default async function Home() {
-  const [allProviders, allNews, allPapers] = await Promise.all([
+  const [allProviders, latestNews, recentPapers, heroStats] = await Promise.all([
     getProviders(),
-    getNews(3),
+    getNews(6),
     getPapers(4),
+    getHeroStats(),
   ]);
 
   const featuredProviders = allProviders.filter((p) =>
@@ -17,11 +18,9 @@ export default async function Home() {
   return (
     <HomeClient
       featuredProviders={featuredProviders}
-      latestNews={allNews}
-      recentPapers={allPapers}
-      totalProviders={allProviders.length}
-      totalNews={allNews.length}
-      totalPapers={allPapers.length}
+      latestNews={latestNews}
+      recentPapers={recentPapers}
+      heroStats={heroStats}
     />
   );
 }
