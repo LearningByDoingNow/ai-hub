@@ -129,12 +129,33 @@ function CardItem({ card, onDismiss, onClick }: {
   );
 }
 
+type WidgetFilterType = "all" | "twitter" | "wechat" | "rss" | "world";
+
+const WIDGET_FILTER_KEY = "ai-hub-widget-filter";
+
+function getCardSourceType(source: string): WidgetFilterType {
+  if (source.startsWith("Twitter:")) return "twitter";
+  if (["机器之心", "量子位", "九万里", "新智元", "AI前线"].includes(source)) return "wechat";
+  const worldSources = [
+    "BBC World News", "Reuters World", "The Guardian World", "Financial Times",
+    "New York Times World", "AP News World", "RFI 法广中文", "Al Jazeera",
+    "Sky News World", "France 24", "Nikkei Asia", "中国新闻网",
+    "Twitter: Reuters", "Twitter: AP", "Twitter: BBC Breaking",
+    "Twitter: CNN Breaking", "Twitter: Al Jazeera",
+  ];
+  if (worldSources.includes(source)) return "world";
+  return "rss";
+}
+
 export default function App() {
   const [cards, setCards] = useState<NotifCard[]>([]);
   const [expanded, setExpanded] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [expandedH, setExpandedH] = useState(DEFAULT_EXPANDED_H);
   const [toast, setToast] = useState<NotifCard | null>(null);
+  const [widgetFilter, setWidgetFilter] = useState<WidgetFilterType>(() => {
+    try { return (localStorage.getItem(WIDGET_FILTER_KEY) as WidgetFilterType) || "all"; } catch { return "all"; }
+  });
   const logoRef = useRef<HTMLDivElement>(null);
   const resizingRef = useRef(false);
   const startYRef = useRef(0);
@@ -273,16 +294,21 @@ export default function App() {
     if (!isTauri) return;
     let cleanupRef: (() => void) | null = null;
     (async () => {
-      const { getCurrentWindow } = await import("@tauri-apps/api/window");
+      const { getCurrentWindow, getAllWindows } = await import("@tauri-apps/api/window");
       const win = getCurrentWindow();
       const unlisten = await win.onFocusChanged(({ payload: focused }) => {
         if (!focused && expanded) {
           if (skipBlurRef.current) { skipBlurRef.current = false; return; }
-          setTimeout(() => {
+          setTimeout(async () => {
+            try {
+              const allWindows = await getAllWindows();
+              const checks = await Promise.all(allWindows.map((w: any) => w.isFocused().catch(() => false)));
+              if (checks.some((f: boolean) => f)) return;
+            } catch {}
             setExpanded(false);
             setHovered(false);
             tauriLib?.resizeWidget(COLLAPSED_W, COLLAPSED_H);
-          }, 100);
+          }, 200);
         }
       });
       cleanupRef = unlisten;
@@ -369,7 +395,17 @@ export default function App() {
   }
 
   const count = cards.filter((c) => !c.exiting).length;
-  const visibleCards = cards.filter(c => !c.exiting);
+  const visibleCards = cards.filter(c => {
+    if (c.exiting) return false;
+    if (widgetFilter === "all") return true;
+    const source = c.type === "news" ? c.data.source : "";
+    return getCardSourceType(source) === widgetFilter;
+  });
+
+  function setFilter(f: WidgetFilterType) {
+    setWidgetFilter(f);
+    try { localStorage.setItem(WIDGET_FILTER_KEY, f); } catch {}
+  }
 
   return (
     <div className="h-full w-full flex flex-col items-start">
@@ -473,6 +509,28 @@ export default function App() {
       {/* Expanded card list */}
       {expanded && (
         <div className="w-full flex-1 overflow-hidden flex flex-col card-list-enter">
+          {/* Source type filter pills */}
+          <div className="flex items-center gap-1 px-3 pb-2 flex-shrink-0">
+            {([
+              ["all", "全部"],
+              ["twitter", "𝕏"],
+              ["wechat", "微信"],
+              ["rss", "RSS"],
+              ["world", "🌍"],
+            ] as [WidgetFilterType, string][]).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors ${
+                  widgetFilter === key
+                    ? "bg-slate-800 text-white dark:bg-white dark:text-slate-900"
+                    : "bg-slate-200/60 text-slate-500 hover:bg-slate-200 dark:bg-slate-700/60 dark:text-slate-400 dark:hover:bg-slate-600"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-2">
             {visibleCards.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">

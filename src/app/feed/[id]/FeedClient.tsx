@@ -6,6 +6,7 @@ import { useLocale } from "@/i18n/context";
 import NewsCard from "@/components/NewsCard";
 import ViewToggle, { type ViewMode } from "@/components/ViewToggle";
 import SearchBar from "@/components/SearchBar";
+import SourceFilter, { useSourceFilter, filterBySource } from "@/components/SourceFilter";
 
 interface Module {
   id: string;
@@ -18,6 +19,7 @@ export default function FeedClient({ moduleId, newsItems }: { moduleId: string; 
   const [view, setView] = useState<ViewMode>("list");
   const [module, setModule] = useState<Module | null>(null);
   const [query, setQuery] = useState("");
+  const { state: filterState, update: setFilterState } = useSourceFilter();
 
   useEffect(() => {
     fetch("/api/modules")
@@ -32,16 +34,24 @@ export default function FeedClient({ moduleId, newsItems }: { moduleId: string; 
     ? (locale === "zh" ? module.name : module.nameEn)
     : moduleId;
 
+  const allSources = useMemo(
+    () => [...new Set(newsItems.map((item) => item.source))].sort(),
+    [newsItems]
+  );
+
   const filtered = useMemo(() => {
-    if (!query.trim()) return newsItems;
-    const q = query.toLowerCase();
-    return newsItems.filter((item) =>
-      item.title.toLowerCase().includes(q) ||
-      item.titleEn.toLowerCase().includes(q) ||
-      item.source.toLowerCase().includes(q) ||
-      item.summary.toLowerCase().includes(q)
-    );
-  }, [newsItems, query]);
+    let items = filterBySource(newsItems, filterState);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      items = items.filter((item) =>
+        item.title.toLowerCase().includes(q) ||
+        item.titleEn.toLowerCase().includes(q) ||
+        item.source.toLowerCase().includes(q) ||
+        item.summary.toLowerCase().includes(q)
+      );
+    }
+    return items;
+  }, [newsItems, query, filterState]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -55,8 +65,12 @@ export default function FeedClient({ moduleId, newsItems }: { moduleId: string; 
         <ViewToggle mode={view} onChange={setView} />
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4">
         <SearchBar value={query} onChange={setQuery} />
+      </div>
+
+      <div className="mb-6">
+        <SourceFilter sources={allSources} state={filterState} onChange={setFilterState} />
       </div>
 
       {filtered.length === 0 ? (
