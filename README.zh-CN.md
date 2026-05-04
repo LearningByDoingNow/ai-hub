@@ -20,6 +20,19 @@
 
 ---
 
+## 预览
+
+<p align="center">
+  <img src="docs/screenshots/home.png" alt="首页" width="100%" />
+</p>
+
+<details>
+<summary><strong>暗黑模式</strong></summary>
+<img src="docs/screenshots/home-dark.png" alt="首页暗黑" width="100%" />
+</details>
+
+---
+
 ## 项目简介
 
 AI Hub 自动聚合 **70+ 全球优质信息源**的内容，涵盖 AI 科技、学术论文、国际时政等领域。提供现代化 WebUI 和原生 macOS 桌面组件，共享同一数据引擎。
@@ -41,27 +54,69 @@ AI Hub 自动聚合 **70+ 全球优质信息源**的内容，涵盖 AI 科技、
 - **定时自动抓取** — 任意间隔（1 分钟到数小时），后台静默运行
 
 ### WebUI 网页端
-- **动态首页** — 实时统计、模块导航带数字
-- **多模块支持** — AI 资讯、论文追踪、国际时政、AI 产品导航（支持自定义模块）
-- **全文搜索** — 每个模块页面都有即时搜索
-- **AI 助手** — 流式输出、@ 引用文章、Markdown 渲染、了解平台所有功能
-- **精确时间** — 文章发布时间 + 相对时间双显示
-- **时效性色彩** — 越新的文章颜色越鲜明
-- **暗黑模式** — 完整明/暗主题切换
-- **中英双语** — 界面完整支持中英文
+
+#### AI 资讯聚合
+实时聚合顶级 AI 信息源，精确显示文章发布时间与时效性色彩。
+
+<img src="docs/screenshots/ai-news.png" alt="AI 资讯" width="100%" />
+
+#### 论文追踪
+追踪 arXiv 最新论文（cs.AI、cs.LG、cs.CL、cs.CV）。
+
+<img src="docs/screenshots/paper-tarck.png" alt="论文追踪" width="100%" />
+
+#### 国际时政
+BBC、金融时报、纽约时报、卫报等全球新闻覆盖。
+
+<img src="docs/screenshots/world-news.png" alt="国际时政" width="100%" />
+
+#### AI 产品导航
+浏览 59+ AI 公司，9 大分类，直达官网和 API。
+
+<img src="docs/screenshots/ai-product.png" alt="AI 产品" width="100%" />
+
+#### AI 智能助手
+流式 AI 对话，支持 `@` 引用平台文章进行分析总结。
+
+<img src="docs/screenshots/chat-with-ai.png" alt="AI 对话" width="100%" />
+
+#### 设置与配置
+LLM 配置、数据源管理、定时抓取设置。
+
+<img src="docs/screenshots/settring-dark.png" alt="设置" width="100%" />
+
+---
 
 ### 桌面组件 (macOS)
-- **浮动 Logo** — 置顶+轨道粒子+彩虹光环+星光特效
-- **实时通知** — 新文章自动弹出 toast 卡片
-- **卡片列表** — 点击展开，点击外部收起
-- **AI 对话** — 流式输出+@引用（WebUI 在线时流式，离线时本地调用）
-- **设置面板** — LLM 配置、抓取间隔、手动抓取
-- **数据共享** — 和 WebUI 使用同一数据库
 
-### AI 产品导航
-- **59 家 AI 公司** — OpenAI、Anthropic、Google、Meta、NVIDIA、DeepSeek、Mistral 等
-- **9 大分类** — 大模型、AI 助手、AI 编程、AI 绘画、AI 视频、AI 音频、AI 搜索、AI 基础设施、AI 机器人
-- **直达链接** — 官网、API 控制台、文档、体验地址
+原生浮动组件，常驻桌面，随时可用。
+
+<table>
+<tr>
+<td width="50%">
+<strong>浮动 Logo 特效</strong><br/>
+<img src="docs/screenshots/desktop-app-widget.png" alt="桌面组件" width="100%" />
+<br/><sub>轨道粒子 + 彩虹光环 + 星光闪烁</sub>
+</td>
+<td width="50%">
+<strong>展开卡片列表</strong><br/>
+<img src="docs/screenshots/desktop-app-list.png" alt="卡片列表" width="100%" />
+<br/><sub>点击展开，点击外部收起</sub>
+</td>
+</tr>
+<tr>
+<td width="50%">
+<strong>桌面全景</strong><br/>
+<img src="docs/screenshots/desktop-app.png" alt="全景" width="100%" />
+<br/><sub>组件 + 设置 + AI 对话并排使用</sub>
+</td>
+<td width="50%">
+<strong>AI 助手</strong><br/>
+<img src="docs/screenshots/desktop-ai-assistant.png" alt="AI 助手" width="100%" />
+<br/><sub>流式输出 + @ 引用文章分析</sub>
+</td>
+</tr>
+</table>
 
 ---
 
