@@ -121,7 +121,9 @@ async function runFetch() {
         continue;
       }
 
-      const skipFilter = result.source.type === "scrape" || result.source.type === "wechat" || result.source.type === "twitter";
+      const skipFilter = result.source.type === "scrape" || result.source.type === "wechat" || result.source.type === "twitter"
+        || result.source.module === "国际时政"
+        || result.source.url?.startsWith("http://localhost:4000/");
       const filtered = skipFilter
         ? result.items
         : result.items.filter((item) => isAIRelated(item.title, item.summary));
