@@ -158,24 +158,56 @@ A native floating widget that lives on your desktop — always accessible, never
 ```bash
 git clone https://github.com/LearningByDoingNow/ai-hub.git
 cd ai-hub
-npm install        # Installs dependencies + auto-initializes SQLite database with 77+ default sources
+npm install
 ```
 
-### 2. First Data Fetch
+### 2. One Command Start
 
 ```bash
-npm run fetch:all        # Fetches news + papers from all 77+ sources (~8 seconds)
+npm run start:all
 ```
 
-This pulls the latest content into the local SQLite database. You can re-run anytime to get fresh data.
+This single command automatically:
+- Starts WeWe RSS Docker container (if Docker is installed, for WeChat sources)
+- Fetches data from all 77+ sources (first run)
+- Starts the WebUI at http://localhost:3000
+- Starts the WeWe watcher (auto-fetches when WeChat has new content)
 
-> **About WeChat sources:** The pre-configured WeChat sources (`wx-*`) require WeWe RSS running via Docker (see [WeChat Sources section](#wechat-sources-wewe-rss--docker) below). If you haven't set up Docker/WeWe RSS, these sources will silently fail — **all other 60+ sources (RSS, arXiv, etc.) work normally without Docker.** You can set up WeChat sources later at any time.
+```
+╔══════════════════════════════════════╗
+║        AI Hub — Starting Up          ║
+╚══════════════════════════════════════╝
 
-### 3. Start WebUI
+[WeWe] Started (port 4000, scan every 10min)
+[Watch] Starting WeWe watcher (auto-fetch on update)
+[WebUI] Starting at http://localhost:3000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✓ AI Hub is running!
+    WebUI:     http://localhost:3000
+    WeWe RSS:  http://localhost:4000
+    Watcher:   Auto-fetch on WeChat updates
+    Press Ctrl+C to stop
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+> **No Docker?** No problem. The script auto-detects — without Docker, WeChat sources are skipped but all other 60+ sources (RSS, arXiv, etc.) work perfectly.
+
+### 3. (Optional) Configure LLM for AI Chat
 
 ```bash
-npm run dev              # Start development server at http://localhost:3000
+cp .env.example .env.local
 ```
+
+Edit `.env.local`:
+```env
+LLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4   # Or any OpenAI-compatible endpoint
+LLM_API_KEY=your_api_key_here
+LLM_MODEL=glm-4.5-air                                # Model name
+LLM_TEMPERATURE=0.5
+```
+
+Or configure directly in WebUI: **Settings → LLM Configuration** (with quick-select presets).
 
 Open http://localhost:3000 — you'll see all aggregated content immediately.
 
