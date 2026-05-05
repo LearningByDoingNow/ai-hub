@@ -53,6 +53,31 @@ export default function SourcesManager() {
     fetchData();
   }
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editModuleIds, setEditModuleIds] = useState<string[]>([]);
+
+  function startEdit(source: Source) {
+    setEditingId(source.id);
+    setEditModuleIds([...source.moduleIds]);
+  }
+
+  function toggleEditModule(modId: string) {
+    setEditModuleIds((ids) =>
+      ids.includes(modId) ? ids.filter((id) => id !== modId) : [...ids, modId]
+    );
+  }
+
+  async function saveEdit(id: string) {
+    if (editModuleIds.length === 0) return;
+    await fetch("/api/sources", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, moduleIds: editModuleIds, module: editModuleIds[0] }),
+    });
+    setEditingId(null);
+    fetchData();
+  }
+
   async function toggleSource(id: string, enabled: boolean) {
     await fetch("/api/sources", {
       method: "PUT",
@@ -141,37 +166,76 @@ export default function SourcesManager() {
       <div className="space-y-2">
         {sources.map((s) => (
           <div key={s.id}
-            className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800/50">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium text-slate-900 dark:text-slate-100">{s.name}</span>
-                {s.moduleIds.map((mid) => (
-                  <span key={mid} className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                    {getModuleName(mid)}
+            className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800/50">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium text-slate-900 dark:text-slate-100">{s.name}</span>
+                  {s.moduleIds.map((mid) => (
+                    <span key={mid} className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                      {getModuleName(mid)}
+                    </span>
+                  ))}
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                    {s.lang === "zh" ? "中文" : "EN"}
                   </span>
-                ))}
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 dark:bg-slate-700 dark:text-slate-400">
-                  {s.lang === "zh" ? "中文" : "EN"}
-                </span>
+                </div>
+                <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500 truncate">{s.url}</p>
               </div>
-              <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500 truncate">{s.url}</p>
+              <div className="flex items-center gap-2 ml-4 shrink-0">
+                <button onClick={() => startEdit(s)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-blue-50 hover:text-blue-500 dark:hover:bg-blue-950/30"
+                  title={locale === "zh" ? "编辑模块" : "Edit module"}>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button onClick={() => toggleSource(s.id, s.enabled)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    s.enabled
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                      : "bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500"
+                  }`}>
+                  {s.enabled ? (locale === "zh" ? "已启用" : "On") : (locale === "zh" ? "已禁用" : "Off")}
+                </button>
+                <button onClick={() => deleteSource(s.id)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2 ml-4 shrink-0">
-              <button onClick={() => toggleSource(s.id, s.enabled)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  s.enabled
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                    : "bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500"
-                }`}>
-                {s.enabled ? (locale === "zh" ? "已启用" : "On") : (locale === "zh" ? "已禁用" : "Off")}
-              </button>
-              <button onClick={() => deleteSource(s.id)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+            {editingId === s.id && (
+              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                <span className="text-xs text-slate-500 dark:text-slate-400 mb-2 block">
+                  {locale === "zh" ? "选择所属模块（可多选）" : "Select modules (multi-select)"}
+                </span>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {modules.map((m) => (
+                    <button key={m.id} onClick={() => toggleEditModule(m.id)}
+                      className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                        editModuleIds.includes(m.id)
+                          ? "bg-blue-600 text-white"
+                          : "bg-slate-200 text-slate-600 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-300"
+                      }`}>
+                      {locale === "zh" ? m.name : m.nameEn}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => saveEdit(s.id)}
+                    disabled={editModuleIds.length === 0}
+                    className="rounded-lg bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+                    {locale === "zh" ? "保存" : "Save"}
+                  </button>
+                  <button onClick={() => setEditingId(null)}
+                    className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-300">
+                    {locale === "zh" ? "取消" : "Cancel"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
