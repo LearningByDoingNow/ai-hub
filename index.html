@@ -1,209 +1,262 @@
 <!DOCTYPE html>
-<html lang="zh" class="dark">
+<html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Hub - Discover · Monitor · Connect</title>
-  <link rel="icon" href="public/favicon.png" />
+  <title>AI Hub - AI 驱动的全球信息聚合平台</title>
+  <meta name="description" content="AI Hub — 智能聚合全球优质信息源，覆盖科技、学术、国际时政等多领域" />
+  <link rel="icon" href="logo-widget.png" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: {} }
-    }
-  </script>
+  <script>tailwind.config={darkMode:'class',theme:{extend:{}}}</script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; }
     .tab-active { background: #3b82f6; color: white; }
-    .fade-in { animation: fadeIn 0.3s ease-in; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-animate { animation: fadeIn 0.3s ease-out; }
+    .freshness-high { border-left: 3px solid rgba(59,130,246,0.8); }
+    .freshness-mid { border-left: 3px solid rgba(59,130,246,0.4); }
+    .freshness-low { border-left: 3px solid rgba(59,130,246,0.1); }
+    .hero-gradient { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #312e81 100%); }
+    .stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(8px); }
   </style>
 </head>
-<body class="min-h-screen bg-slate-950 text-white">
-  <!-- Navbar -->
-  <nav class="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur-xl">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 flex items-center justify-between h-14">
-      <div class="flex items-center gap-2">
-        <img src="public/logo-icon.png" alt="AI Hub" class="w-8 h-8 rounded-lg" />
-        <span class="font-bold text-lg">AI Hub</span>
-      </div>
-      <div class="flex items-center gap-1" id="nav-tabs">
-        <button onclick="switchTab('home')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors" data-tab="home">AI产品导航</button>
-        <button onclick="switchTab('news')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors" data-tab="news">AI 资讯</button>
-        <button onclick="switchTab('papers')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors" data-tab="papers">论文追踪</button>
-        <button onclick="switchTab('world')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors" data-tab="world">国际时政</button>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="text-xs text-slate-500 hidden sm:block">只读预览</span>
-        <a href="https://github.com/LearningByDoingNow/ai-hub" target="_blank" class="text-slate-400 hover:text-white text-sm">GitHub ↗</a>
-      </div>
-    </div>
-  </nav>
+<body class="bg-slate-50 min-h-screen">
 
-  <!-- Main Content -->
-  <main class="mx-auto max-w-7xl px-4 sm:px-6 py-8" id="main-content">
-    <div class="text-center py-12">
-      <p class="text-slate-500 text-sm uppercase tracking-wider mb-2">AI HUB</p>
-      <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">全球信息，智能聚合</h1>
-      <p class="text-slate-400 mb-8">AI 自动抓取、过滤、聚合，重要的事不错过</p>
-      <div id="stats" class="flex justify-center gap-8 mb-8"></div>
+  <!-- Hero Section -->
+  <section class="hero-gradient text-white">
+    <div class="max-w-6xl mx-auto px-4 py-12 text-center">
+      <img src="logo-widget.png" alt="AI Hub" class="h-16 mx-auto mb-4" />
+      <h1 class="text-3xl font-extrabold sm:text-4xl">
+        全球信息，<span class="bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">智能聚合</span>
+      </h1>
+      <p class="mt-3 text-blue-200/70 max-w-xl mx-auto">
+        从科技前沿到国际时政，AI 自动抓取、过滤、聚合，重要的事不错过
+      </p>
+
+      <!-- Live Stats -->
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+        <div class="stat-card rounded-xl px-5 py-3 text-center">
+          <div class="text-2xl font-bold" id="stat-sources">--</div>
+          <div class="text-xs text-blue-200/50">数据源</div>
+        </div>
+        <div class="stat-card rounded-xl px-5 py-3 text-center">
+          <div class="text-2xl font-bold" id="stat-news">--</div>
+          <div class="text-xs text-blue-200/50">篇资讯</div>
+        </div>
+        <div class="stat-card rounded-xl px-5 py-3 text-center">
+          <div class="text-2xl font-bold" id="stat-papers">--</div>
+          <div class="text-xs text-blue-200/50">篇论文</div>
+        </div>
+        <div class="stat-card rounded-xl px-5 py-3 text-center">
+          <div class="text-2xl font-bold" id="stat-providers">--</div>
+          <div class="text-xs text-blue-200/50">家 AI 公司</div>
+        </div>
+      </div>
+
+      <div class="mt-4 flex items-center justify-center gap-2 text-xs text-emerald-300/70">
+        <span class="relative flex h-2 w-2"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span></span>
+        <span id="stat-updated">自动更新中</span>
+      </div>
+
+      <div class="mt-6 flex flex-wrap gap-3 justify-center">
+        <a href="https://github.com/LearningByDoingNow/ai-hub" target="_blank"
+          class="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20 transition-colors">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.37.5 0 5.78 0 12.292c0 5.211 3.438 9.63 8.205 11.188.6.111.82-.254.82-.567 0-.28-.01-1.022-.015-2.005-3.338.711-4.042-1.582-4.042-1.582-.546-1.361-1.335-1.723-1.335-1.723-1.087-.731.084-.716.084-.716 1.205.082 1.838 1.215 1.838 1.215 1.07 1.803 2.809 1.282 3.495.981.108-.763.417-1.282.76-1.577-2.665-.295-5.466-1.309-5.466-5.827 0-1.287.465-2.339 1.235-3.164-.135-.298-.54-1.497.105-3.121 0 0 1.005-.316 3.3 1.209.96-.262 1.98-.392 3-.398 1.02.006 2.04.136 3 .398 2.28-1.525 3.285-1.209 3.285-1.209.645 1.624.24 2.823.12 3.121.765.825 1.23 1.877 1.23 3.164 0 4.53-2.805 5.527-5.475 5.817.42.354.81 1.077.81 2.182 0 1.578-.015 2.846-.015 3.229 0 .309.21.678.825.56C20.565 21.917 24 17.495 24 12.292 24 5.78 18.627.5 12 .5z"/></svg>
+          GitHub
+        </a>
+        <a href="https://github.com/LearningByDoingNow/ai-hub/releases" target="_blank"
+          class="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium hover:bg-blue-600 transition-colors">
+          下载桌面组件
+        </a>
+      </div>
     </div>
-    <div id="content" class="fade-in"></div>
-  </main>
+  </section>
+
+  <!-- Navigation -->
+  <div class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-2 flex items-center gap-2 overflow-x-auto">
+      <button onclick="switchTab('news')" id="tab-news" class="tab-active rounded-lg px-4 py-1.5 text-sm font-medium transition-colors whitespace-nowrap">AI 资讯</button>
+      <button onclick="switchTab('world')" id="tab-world" class="rounded-lg px-4 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 transition-colors whitespace-nowrap">国际时政</button>
+      <button onclick="switchTab('papers')" id="tab-papers" class="rounded-lg px-4 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 transition-colors whitespace-nowrap">论文追踪</button>
+      <button onclick="switchTab('providers')" id="tab-providers" class="rounded-lg px-4 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 transition-colors whitespace-nowrap">AI 产品导航</button>
+      <div class="ml-auto">
+        <input type="text" id="search" placeholder="搜索..." oninput="render()"
+          class="w-48 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-blue-400" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <div id="content-info" class="mb-4 text-sm text-slate-400"></div>
+    <div id="content"></div>
+  </div>
 
   <!-- Footer -->
-  <footer class="border-t border-slate-800 mt-12 py-8">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 text-center text-slate-500 text-sm">
-      <p>AI Hub - 汇集全球 AI 产品导航 | <a href="https://github.com/LearningByDoingNow/ai-hub" class="text-blue-400 hover:underline">GitHub</a></p>
-      <p class="mt-1 text-xs text-slate-600">此为只读静态预览，完整功能请 clone 本地运行</p>
+  <footer class="border-t border-slate-200 bg-white mt-12">
+    <div class="max-w-6xl mx-auto px-4 py-6 text-center text-sm text-slate-400">
+      <p>AI Hub — AI 驱动的全球信息聚合平台</p>
+      <p class="mt-1">
+        <a href="https://github.com/LearningByDoingNow/ai-hub" class="text-blue-500 hover:underline">GitHub</a> ·
+        <a href="https://github.com/LearningByDoingNow/ai-hub/releases" class="text-blue-500 hover:underline">下载桌面组件</a> ·
+        数据每 2 小时自动更新
+      </p>
     </div>
   </footer>
 
   <script>
-    let DATA = { news: [], papers: [], providers: [], modules: [] };
-    let currentTab = 'home';
+    let allData = { news: [], papers: [], providers: [], modules: [], sources: [] };
+    let currentTab = 'news';
 
     async function loadData() {
-      const [news, papers, providers, modules] = await Promise.all([
-        fetch('preview-data/news.json').then(r => r.json()),
-        fetch('preview-data/papers.json').then(r => r.json()),
-        fetch('preview-data/providers.json').then(r => r.json()),
-        fetch('preview-data/modules.json').then(r => r.json()),
+      const [news, papers, providers, stats, sources] = await Promise.all([
+        fetch('data/news.json').then(r => r.json()).catch(() => []),
+        fetch('data/papers.json').then(r => r.json()).catch(() => []),
+        fetch('data/providers.json').then(r => r.json()).catch(() => []),
+        fetch('data/stats.json').then(r => r.json()).catch(() => ({})),
+        fetch('data/sources.json').then(r => r.json()).catch(() => []),
       ]);
-      DATA = { news, papers, providers, modules };
-      renderStats();
-      switchTab('home');
+      allData = { news, papers, providers, sources };
+
+      document.getElementById('stat-sources').textContent = stats.sources || 0;
+      document.getElementById('stat-news').textContent = stats.news || 0;
+      document.getElementById('stat-papers').textContent = stats.papers || 0;
+      document.getElementById('stat-providers').textContent = stats.providers || 0;
+      if (stats.updatedAt) {
+        document.getElementById('stat-updated').textContent = '更新于 ' + stats.updatedAt.slice(0, 16).replace('T', ' ');
+      }
+      render();
     }
 
-    function renderStats() {
-      const el = document.getElementById('stats');
-      const stats = [
-        { label: 'AI产品导航', count: DATA.providers.length + '+', icon: '🔲' },
-        { label: 'AI资讯', count: DATA.news.length + '+', icon: '📰' },
-        { label: '论文追踪', count: DATA.papers.length + '+', icon: '📖' },
-        { label: '国际时政', count: DATA.news.filter(n => isWorldSource(n.source)).length + '+', icon: '🌍' },
-      ];
-      el.innerHTML = stats.map(s => `
-        <div class="text-center">
-          <div class="text-2xl font-bold text-white">${s.count}</div>
-          <div class="text-xs text-slate-400 mt-1">${s.icon} ${s.label}</div>
-        </div>
-      `).join('');
-    }
-
-    const WORLD_SOURCES = ['BBC World News','Reuters World','The Guardian World','Financial Times','New York Times World','AP News World','Al Jazeera','Sky News World','France 24','Nikkei Asia','DW News','The Economist','BBC 中文','RFI 法广中文','中国新闻网','中国日报 (国际)','联合国新闻','联合早报','Washington Post World','Foreign Policy'];
-
-    function isWorldSource(source) {
-      return WORLD_SOURCES.includes(source);
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('[id^="tab-"]').forEach(el => {
+        el.className = 'rounded-lg px-4 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 transition-colors whitespace-nowrap';
+      });
+      document.getElementById('tab-' + tab).className = 'tab-active rounded-lg px-4 py-1.5 text-sm font-medium transition-colors whitespace-nowrap';
+      document.getElementById('search').value = '';
+      render();
     }
 
     function timeAgo(dateStr) {
       if (!dateStr) return '';
-      let d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T') + 'Z');
-      if (isNaN(d.getTime())) return dateStr;
-      const m = Math.floor((Date.now() - d.getTime()) / 60000);
+      let d;
+      if (dateStr.includes('T')) d = new Date(dateStr);
+      else if (dateStr.includes(' ')) d = new Date(dateStr.replace(' ', 'T') + 'Z');
+      else d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d)) return dateStr;
+      const diff = Date.now() - d.getTime();
+      if (diff < 0) return dateStr;
+      const m = Math.floor(diff / 60000);
       if (m < 1) return '刚刚';
       if (m < 60) return m + '分钟前';
       const h = Math.floor(m / 60);
       if (h < 24) return h + '小时前';
       const days = Math.floor(h / 24);
-      return days + '天前';
+      if (days < 7) return days + '天前';
+      return dateStr.slice(0, 10);
     }
 
-    function switchTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('#nav-tabs button').forEach(b => {
-        b.classList.toggle('tab-active', b.dataset.tab === tab);
-        b.classList.toggle('text-slate-300', b.dataset.tab !== tab);
-      });
-      const content = document.getElementById('content');
-      content.className = 'fade-in';
-      if (tab === 'home') renderProviders();
-      else if (tab === 'news') renderNews(DATA.news.filter(n => !isWorldSource(n.source)));
-      else if (tab === 'papers') renderPapers();
-      else if (tab === 'world') renderNews(DATA.news.filter(n => isWorldSource(n.source)));
+    function freshClass(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr.includes('T') ? dateStr : dateStr + 'T00:00:00');
+      if (isNaN(d)) return '';
+      const h = (Date.now() - d.getTime()) / 3600000;
+      if (h < 3) return 'freshness-high';
+      if (h < 12) return 'freshness-mid';
+      return 'freshness-low';
     }
 
-    function renderProviders() {
-      const categories = [...new Set(DATA.providers.map(p => p.category))];
-      const content = document.getElementById('content');
-      content.innerHTML = `
-        <h2 class="text-xl font-bold mb-6">AI 产品导航 <span class="text-sm font-normal text-slate-500">${DATA.providers.length} 个产品</span></h2>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          ${DATA.providers.map(p => {
-            const links = typeof p.links === 'string' ? JSON.parse(p.links) : p.links;
-            const tags = typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags;
-            return `
-            <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-5 hover:border-slate-600 transition-colors">
-              <div class="flex items-start justify-between mb-2">
-                <h3 class="font-semibold text-white">${p.name}</h3>
-                <span class="text-xs text-slate-500">${p.country}</span>
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      if (dateStr.includes('T')) return dateStr.slice(0, 19).replace('T', ' ');
+      return dateStr;
+    }
+
+    // Classify news into AI vs World
+    const worldSources = new Set(['BBC World News','Reuters World','The Guardian World','Financial Times','New York Times World','Al Jazeera','France 24','DW News','Sky News World','AP News World','RFI 法广中文','Nikkei Asia','Foreign Policy','The Economist','中国新闻网','联合国新闻','联合早报','中国日报 (国际)','BBC 中文']);
+
+    function render() {
+      const query = document.getElementById('search').value.toLowerCase();
+      const container = document.getElementById('content');
+      const info = document.getElementById('content-info');
+      let html = '';
+
+      if (currentTab === 'news' || currentTab === 'world') {
+        const isWorld = currentTab === 'world';
+        const items = allData.news.filter(n => {
+          const matchWorld = worldSources.has(n.source);
+          if (isWorld && !matchWorld) return false;
+          if (!isWorld && matchWorld) return false;
+          if (query && !n.title.toLowerCase().includes(query) && !(n.source || '').toLowerCase().includes(query)) return false;
+          return true;
+        }).slice(0, 60);
+
+        info.textContent = `${items.length} 条${isWorld ? '国际时政' : 'AI 资讯'}`;
+
+        html = '<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">' + items.map(n => `
+          <a href="${n.url}" target="_blank" rel="noopener"
+            class="card-animate block rounded-xl border border-slate-200 bg-white p-4 hover:shadow-lg hover:border-blue-200 transition-all ${freshClass(n.created_at || n.date)}">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">${n.source}</span>
+              <span class="text-xs text-slate-400">${timeAgo(n.created_at || n.date)}</span>
+            </div>
+            <h3 class="text-sm font-semibold text-slate-900 mb-1.5 line-clamp-2">${n.title}</h3>
+            <p class="text-xs text-slate-500 line-clamp-2">${n.summary || n.summary_en || ''}</p>
+            <div class="mt-2 text-xs text-slate-300">${formatDate(n.date)}</div>
+          </a>
+        `).join('') + '</div>';
+
+      } else if (currentTab === 'papers') {
+        const items = allData.papers.filter(p =>
+          !query || p.title.toLowerCase().includes(query)
+        ).slice(0, 40);
+        info.textContent = `${items.length} 篇论文`;
+
+        html = '<div class="grid gap-3 sm:grid-cols-2">' + items.map(p => {
+          const authors = JSON.parse(p.authors || '[]').slice(0, 3).join(', ');
+          const links = JSON.parse(p.links || '[]');
+          return `
+            <div class="card-animate rounded-xl border border-slate-200 bg-white p-4 hover:shadow-md transition-all">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs font-semibold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-md">${p.venue}</span>
+                <span class="text-xs text-slate-400">${p.date?.slice(0, 10) || ''}</span>
               </div>
-              <span class="inline-block text-xs bg-blue-500/20 text-blue-300 rounded px-2 py-0.5 mb-2">${p.category}</span>
-              <p class="text-sm text-slate-400 mb-3">${p.description}</p>
-              <div class="flex flex-wrap gap-1 mb-3">
-                ${(tags || []).slice(0, 4).map(t => `<span class="text-xs bg-slate-700 text-slate-300 rounded-full px-2 py-0.5">${t}</span>`).join('')}
+              <h3 class="text-sm font-semibold text-slate-900 mb-1">${p.title}</h3>
+              <p class="text-xs text-slate-400 mb-2">${authors}</p>
+              <p class="text-xs text-slate-500 line-clamp-3">${p.abstract || ''}</p>
+              ${links.length ? `<div class="mt-2 flex gap-2">${links.map(l => `<a href="${l.url || l}" target="_blank" class="text-xs text-blue-600 hover:underline">${l.label || 'Link'} ↗</a>`).join('')}</div>` : ''}
+            </div>`;
+        }).join('') + '</div>';
+
+      } else if (currentTab === 'providers') {
+        const items = allData.providers.filter(p =>
+          !query || p.name.toLowerCase().includes(query) || (p.category || '').toLowerCase().includes(query) || (p.description || '').toLowerCase().includes(query)
+        );
+        info.textContent = `${items.length} 家 AI 公司`;
+
+        html = '<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">' + items.map(p => {
+          const tags = JSON.parse(p.tags || '[]');
+          const links = JSON.parse(p.links || '[]');
+          return `
+            <div class="card-animate rounded-xl border border-slate-200 bg-white p-4 hover:shadow-md transition-all">
+              <div class="flex items-center justify-between mb-1">
+                <h3 class="font-semibold text-slate-900">${p.name}</h3>
+                <span class="text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">${p.country}</span>
+              </div>
+              <p class="text-xs text-slate-500 mb-2">${p.description}</p>
+              <div class="flex flex-wrap gap-1 mb-2">
+                <span class="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">${p.category}</span>
+                ${tags.slice(0, 3).map(t => `<span class="text-xs bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded">${t}</span>`).join('')}
               </div>
               <div class="flex flex-wrap gap-2">
-                ${(links || []).slice(0, 4).map(l => `<a href="${l.url}" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 border border-slate-600 rounded-lg px-2 py-1 hover:border-blue-500 transition-colors">${l.label} ↗</a>`).join('')}
+                ${links.slice(0, 4).map(l => `<a href="${l.url}" target="_blank" class="text-xs text-blue-600 hover:underline">${l.label} ↗</a>`).join('')}
               </div>
             </div>`;
-          }).join('')}
-        </div>
-      `;
-    }
+        }).join('') + '</div>';
+      }
 
-    function renderNews(items) {
-      const content = document.getElementById('content');
-      const title = currentTab === 'world' ? '国际时政' : 'AI 资讯';
-      content.innerHTML = `
-        <h2 class="text-xl font-bold mb-6">${title} <span class="text-sm font-normal text-slate-500">${items.length} 条</span></h2>
-        <div class="flex flex-col gap-4">
-          ${items.map(n => `
-            <a href="${n.url}" target="_blank" class="block rounded-xl border border-slate-700 bg-slate-800/50 p-5 hover:border-blue-600 transition-colors group">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-xs font-semibold bg-blue-500/20 text-blue-300 rounded px-2 py-0.5">${n.source}</span>
-                <span class="text-xs text-slate-500">${timeAgo(n.created_at || n.date)}</span>
-                <span class="text-xs text-slate-600">${(n.date || '').split('T')[0]}</span>
-              </div>
-              <h3 class="font-semibold text-white group-hover:text-blue-400 transition-colors mb-1 line-clamp-2">${n.title || n.title_en}</h3>
-              <p class="text-sm text-slate-400 line-clamp-2">${n.summary || n.summary_en || ''}</p>
-            </a>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    function renderPapers() {
-      const content = document.getElementById('content');
-      content.innerHTML = `
-        <h2 class="text-xl font-bold mb-6">论文追踪 <span class="text-sm font-normal text-slate-500">${DATA.papers.length} 篇</span></h2>
-        <div class="flex flex-col gap-4">
-          ${DATA.papers.map(p => {
-            const authors = typeof p.authors === 'string' ? JSON.parse(p.authors) : p.authors;
-            const links = typeof p.links === 'string' ? JSON.parse(p.links) : p.links;
-            return `
-            <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-5">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-xs font-semibold bg-purple-500/20 text-purple-300 rounded px-2 py-0.5">${p.venue || 'arXiv'}</span>
-                <span class="text-xs text-slate-500">${p.date}</span>
-              </div>
-              <h3 class="font-semibold text-white mb-2">${p.title}</h3>
-              <p class="text-xs text-slate-500 mb-2">${(authors || []).slice(0, 5).join(', ')}${(authors || []).length > 5 ? ' ...' : ''}</p>
-              <p class="text-sm text-slate-400 line-clamp-3 mb-3">${p.abstract || p.abstract_en || ''}</p>
-              <div class="flex gap-2">
-                ${(links || []).map(l => {
-                  const label = typeof l === 'string' ? 'Link' : l.label;
-                  const url = typeof l === 'string' ? l : l.url;
-                  return `<a href="${url}" target="_blank" class="text-xs text-purple-400 hover:text-purple-300 border border-slate-600 rounded-lg px-2 py-1 hover:border-purple-500 transition-colors">${label} ↗</a>`;
-                }).join('')}
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-      `;
+      container.innerHTML = html || '<p class="text-center text-slate-400 py-20">暂无数据 — 请等待 GitHub Actions 首次构建</p>';
     }
 
     loadData();
