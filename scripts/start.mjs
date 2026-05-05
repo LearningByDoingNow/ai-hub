@@ -133,6 +133,18 @@ function startDesktop() {
     return null;
   }
 
+  // Ensure dependencies are installed
+  const hasNodeModules = tryExec(`ls "${desktopDir}/node_modules/.package-lock.json"`);
+  if (!hasNodeModules) {
+    log("Desktop", COLORS.blue, "Installing dependencies...");
+    try {
+      execSync("npm install", { cwd: desktopDir, stdio: "pipe" });
+    } catch (e) {
+      log("Desktop", COLORS.yellow, "Failed to install dependencies — skipping desktop widget");
+      return null;
+    }
+  }
+
   log("Desktop", COLORS.blue, "Starting Tauri desktop widget...");
   const proc = spawn("npx", ["tauri", "dev"], {
     cwd: desktopDir,
