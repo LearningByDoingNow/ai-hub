@@ -57,9 +57,7 @@ Dark-themed dashboard with stats overview, latest news, recent papers, and featu
 #### AI News Aggregation
 Real-time AI news from top sources with source-type filtering (Twitter, WeChat, RSS) and search.
 
-https://github.com/user-attachments/assets/placeholder-ai-news
-
-> Video: `docs/screenshots_new/ai-0.mov`
+<img src="docs/screenshots_new/ai-news.gif" alt="AI News Demo" width="100%" />
 
 #### Paper Tracker
 Track cutting-edge research papers from arXiv (cs.AI, cs.LG, cs.CL, cs.CV) with direct links to papers and PDFs.
@@ -74,9 +72,7 @@ International affairs coverage from BBC, Financial Times, NYT, Reuters, Guardian
 #### AI Products Directory
 Browse 59+ AI companies across 9 categories with direct links to official sites, APIs, and documentation.
 
-https://github.com/user-attachments/assets/placeholder-ai-product
-
-> Video: `docs/screenshots_new/ai_product.mov`
+<img src="docs/screenshots_new/ai-product.gif" alt="AI Products Demo" width="100%" />
 
 #### Favorites
 Unified favorites system shared between WebUI and Desktop Widget — save and manage your bookmarks.
@@ -101,13 +97,15 @@ Comprehensive settings panel with 5 tabs:
 <img src="docs/screenshots_new/setting_product_4.png" alt="Settings - Products" width="100%" />
 <img src="docs/screenshots_new/setting_llmconfig_5.png" alt="Settings - LLM" width="100%" />
 
-https://github.com/user-attachments/assets/placeholder-setting-fetch
+<details>
+<summary><strong>Data Fetching Demo</strong></summary>
+<img src="docs/screenshots_new/setting-fetch.gif" alt="Data Fetch Demo" width="100%" />
+</details>
 
-> Video: `docs/screenshots_new/setting_fetch_data_1.mov`
-
-https://github.com/user-attachments/assets/placeholder-setting-llm
-
-> Video: `docs/screenshots_new/setting_llm_config.mov`
+<details>
+<summary><strong>LLM Configuration Demo</strong></summary>
+<img src="docs/screenshots_new/setting-llm.gif" alt="LLM Config Demo" width="100%" />
+</details>
 
 ---
 
@@ -130,9 +128,7 @@ A native floating widget that lives on your desktop — always accessible, never
 </tr>
 </table>
 
-https://github.com/user-attachments/assets/placeholder-ai-video
-
-> Video: `docs/screenshots_new/ai-video.mov`
+<img src="docs/screenshots_new/desktop-demo.gif" alt="Desktop Widget Demo" width="100%" />
 
 **Widget Features:**
 - Floating logo with particle effects — click to expand
@@ -184,6 +180,54 @@ Set up automatic fetching via:
 - **WebUI**: Settings → Data Fetching → Set interval
 - **Desktop Widget**: Settings → Set interval
 - **Cron job**: `npm run fetch:schedule` (runs every 4 hours)
+
+---
+
+## WeChat Sources (WeWe RSS + Docker)
+
+AI Hub uses [WeWe RSS](https://github.com/cooderl/wewe-rss) to fetch WeChat public account articles. WeWe RSS converts WeChat subscriptions into standard RSS/Atom feeds, running locally via Docker.
+
+### Setup
+
+```bash
+# 1. Pull and run WeWe RSS
+docker run -d \
+  --name wewe-rss \
+  -p 4000:4000 \
+  -e DATABASE_TYPE=sqlite \
+  -e AUTH_CODE=your_auth_code \
+  -v $(pwd)/wewe-data:/app/data \
+  cooderl/wewe-rss:latest
+
+# 2. Open http://localhost:4000 to configure WeWe RSS
+# 3. Add WeChat accounts you want to follow
+```
+
+### How It Works
+
+```
+WeChat Public Accounts
+        ↓ (WeWe RSS scans via configured account)
+WeWe RSS (Docker, localhost:4000)
+        ↓ (Atom feed: /feeds/MP_WXS_xxxxx.atom)
+AI Hub engine.mjs (fetches like regular RSS)
+        ↓
+SQLite database → WebUI + Desktop Widget
+```
+
+### Adding WeChat Sources
+
+1. Open WeWe RSS dashboard at `http://localhost:4000`
+2. Add the WeChat public accounts you want to follow
+3. Copy the feed URL (e.g., `http://localhost:4000/feeds/MP_WXS_3073282833.atom`)
+4. In AI Hub Settings → Data Sources → Add Source:
+   - Name: `机器之心` (or any name)
+   - URL: the feed URL from step 3
+   - Module: select the target module (e.g., "AI News")
+
+Pre-configured WeChat sources include: 机器之心, 新智元, 量子位, 36氪, 人民日报, 央视军事, 九万里, and more.
+
+> **Note:** WeWe RSS must be running (`docker start wewe-rss`) for WeChat source fetching to work. Other sources (RSS, arXiv) work without Docker.
 
 ---
 
