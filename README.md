@@ -305,14 +305,26 @@ Pre-configured WeChat sources include: 机器之心, 新智元, 量子位, 36氪
 
 ## Desktop Widget
 
-### Build from Source (requires Rust)
+### Run in Development Mode
 
 ```bash
-# Install Rust if not already installed
+# Prerequisites: Rust must be installed
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Build
+# First time: install desktop dependencies
 npm run desktop:install
+
+# Start desktop widget (dev mode with hot-reload)
+npm run desktop:dev
+```
+
+The widget will appear as a floating logo on your desktop. Click to expand the card list.
+
+> **Note:** The desktop widget reads from the same `data/ai-hub.db` as the WebUI. Make sure you've run `npm run fetch:all` at least once so there's data to display.
+
+### Build for Distribution
+
+```bash
 npm run desktop:build
 
 # Output:

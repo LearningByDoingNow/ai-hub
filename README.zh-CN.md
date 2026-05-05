@@ -305,12 +305,31 @@ SQLite 数据库 → WebUI + 桌面组件
 
 ## 桌面组件
 
-### 从源码构建（需要 Rust）
+### 开发模式运行
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh  # 安装 Rust
+# 前置条件：需要安装 Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# 首次运行：安装桌面组件依赖
 npm run desktop:install
+
+# 启动桌面组件（开发模式，支持热更新）
+npm run desktop:dev
+```
+
+组件启动后会在桌面显示一个浮动 Logo，点击即可展开卡片列表。
+
+> **注意：** 桌面组件和 WebUI 读取同一个 `data/ai-hub.db` 数据库。请确保至少运行过一次 `npm run fetch:all` 以获取数据。
+
+### 构建安装包
+
+```bash
 npm run desktop:build
+
+# 输出：
+# .app → desktop/src-tauri/target/release/bundle/macos/AI Hub.app
+# .dmg → desktop/src-tauri/target/release/bundle/dmg/AI Hub_0.1.0_aarch64.dmg
 ```
 
 ### 安装 DMG
