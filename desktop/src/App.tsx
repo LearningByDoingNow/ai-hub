@@ -129,21 +129,18 @@ function CardItem({ card, onDismiss, onClick }: {
   );
 }
 
-type WidgetFilterType = "all" | "twitter" | "wechat" | "rss" | "world";
+type WidgetFilterType = "all" | "twitter" | "wechat" | "rss";
 
 const WIDGET_FILTER_KEY = "ai-hub-widget-filter";
 
+const WECHAT_SOURCES = [
+  "机器之心", "量子位", "九万里", "新智元", "AI前线", "智猩猩AI",
+  "36氪(微信)", "电手", "数字生命卡兹克", "人民日报", "央视军事", "外军防务研究前沿",
+];
+
 function getCardSourceType(source: string): WidgetFilterType {
   if (source.startsWith("Twitter:")) return "twitter";
-  if (["机器之心", "量子位", "九万里", "新智元", "AI前线"].includes(source)) return "wechat";
-  const worldSources = [
-    "BBC World News", "Reuters World", "The Guardian World", "Financial Times",
-    "New York Times World", "AP News World", "RFI 法广中文", "Al Jazeera",
-    "Sky News World", "France 24", "Nikkei Asia", "中国新闻网",
-    "Twitter: Reuters", "Twitter: AP", "Twitter: BBC Breaking",
-    "Twitter: CNN Breaking", "Twitter: Al Jazeera",
-  ];
-  if (worldSources.includes(source)) return "world";
+  if (WECHAT_SOURCES.includes(source)) return "wechat";
   return "rss";
 }
 
@@ -516,7 +513,6 @@ export default function App() {
               ["twitter", "𝕏"],
               ["wechat", "微信"],
               ["rss", "RSS"],
-              ["world", "🌍"],
             ] as [WidgetFilterType, string][]).map(([key, label]) => (
               <button
                 key={key}

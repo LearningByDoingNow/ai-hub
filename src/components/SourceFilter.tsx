@@ -5,7 +5,7 @@ import { useLocale } from "@/i18n/context";
 
 const STORAGE_KEY = "ai-hub-source-filter";
 
-type FilterType = "all" | "twitter" | "wechat" | "rss" | "world";
+type FilterType = "all" | "twitter" | "wechat" | "rss";
 
 interface FilterState {
   activeType: FilterType;
@@ -14,17 +14,14 @@ interface FilterState {
 
 const DEFAULT_STATE: FilterState = { activeType: "all", hiddenSources: [] };
 
+const WECHAT_SOURCES = [
+  "机器之心", "量子位", "九万里", "新智元", "AI前线", "智猩猩AI",
+  "36氪(微信)", "电手", "数字生命卡兹克", "人民日报", "央视军事", "外军防务研究前沿",
+];
+
 function getSourceType(source: string): FilterType {
   if (source.startsWith("Twitter:")) return "twitter";
-  if (["机器之心", "量子位", "九万里", "新智元", "AI前线"].includes(source)) return "wechat";
-  const worldSources = [
-    "BBC World News", "Reuters World", "The Guardian World", "Financial Times",
-    "New York Times World", "AP News World", "RFI 法广中文", "Al Jazeera",
-    "Sky News World", "France 24", "Nikkei Asia", "中国新闻网",
-    "Twitter: Reuters", "Twitter: AP", "Twitter: BBC Breaking",
-    "Twitter: CNN Breaking", "Twitter: Al Jazeera",
-  ];
-  if (worldSources.includes(source)) return "world";
+  if (WECHAT_SOURCES.includes(source)) return "wechat";
   return "rss";
 }
 
@@ -99,11 +96,10 @@ export default function SourceFilter({
     { key: "twitter", label: "Twitter" },
     { key: "wechat", label: locale === "zh" ? "微信" : "WeChat" },
     { key: "rss", label: "RSS" },
-    { key: "world", label: locale === "zh" ? "国际时政" : "World" },
   ];
 
   const grouped = useMemo(() => {
-    const map: Record<FilterType, string[]> = { all: [], twitter: [], wechat: [], rss: [], world: [] };
+    const map: Record<FilterType, string[]> = { all: [], twitter: [], wechat: [], rss: [] };
     for (const s of sources) {
       const type = getSourceType(s);
       map[type].push(s);
