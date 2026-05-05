@@ -255,6 +255,21 @@ npm run fetch:all && npm run dev
 | **终端** | `npm run fetch:schedule`（每 4 小时，前台运行） |
 | **系统 cron** | `crontab -e` → `0 */4 * * * cd /path/to/ai-hub && npm run fetch:all` |
 
+### 重装 / 重置
+
+如果出现问题（命令找不到、模块缺失等）：
+
+```bash
+# 从头重装所有依赖
+rm -rf node_modules desktop/node_modules
+npm install                    # WebUI 依赖
+npm run desktop:install        # 桌面组件依赖
+
+# 验证一切正常
+npm run dev                    # WebUI → http://localhost:3000
+npm run desktop:dev            # 桌面组件（另开终端）
+```
+
 ---
 
 ## 微信公众号数据源（WeWe RSS + Docker）

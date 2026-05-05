@@ -255,6 +255,21 @@ npm run fetch:all && npm run dev
 | **Terminal** | `npm run fetch:schedule` (every 4 hours, foreground) |
 | **System cron** | `crontab -e` → `0 */4 * * * cd /path/to/ai-hub && npm run fetch:all` |
 
+### Reinstall / Reset
+
+If something breaks (missing commands, modules not found, etc.):
+
+```bash
+# Reinstall all dependencies from scratch
+rm -rf node_modules desktop/node_modules
+npm install                    # WebUI dependencies
+npm run desktop:install        # Desktop widget dependencies
+
+# Verify everything works
+npm run dev                    # WebUI → http://localhost:3000
+npm run desktop:dev            # Desktop widget (separate terminal)
+```
+
 ---
 
 ## WeChat Sources (WeWe RSS + Docker)
