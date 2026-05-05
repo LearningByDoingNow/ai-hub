@@ -174,6 +174,9 @@ fn get_config_value(key: String) -> Result<String, String> {
 #[tauri::command]
 fn save_config_value(key: String, value: String) -> Result<(), String> {
     let env_path = db::find_env_path().ok_or("Cannot find .env.local")?;
+    if let Some(parent) = env_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
     let mut lines: Vec<String> = if env_path.exists() {
         std::fs::read_to_string(&env_path).unwrap_or_default().lines().map(|l| l.to_string()).collect()
     } else {

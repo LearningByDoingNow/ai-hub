@@ -239,13 +239,11 @@ pub fn find_project_root() -> Option<PathBuf> {
 }
 
 pub fn find_env_path() -> Option<PathBuf> {
-    // Try project root first, then standalone dir
+    // Try project root first (always use this path even if file doesn't exist yet)
     if let Some(root) = find_project_root() {
-        let p = root.join(".env.local");
-        if p.exists() { return Some(p); }
+        return Some(root.join(".env.local"));
     }
-    let standalone = standalone_db_dir().join(".env.local");
-    Some(standalone)
+    Some(standalone_db_dir().join(".env.local"))
 }
 
 pub fn search_news_papers(query: &str) -> Result<Vec<serde_json::Value>, String> {
