@@ -145,41 +145,113 @@ A native floating widget that lives on your desktop — always accessible, never
 ## Quick Start
 
 ### Prerequisites
-- **Node.js** 18+ (recommend 20+)
-- **npm** 9+
 
-### Installation
+| Requirement | Version | Purpose |
+|-------------|---------|---------|
+| **Node.js** | 18+ (recommend 20+) | WebUI + data fetching engine |
+| **npm** | 9+ | Package management |
+| **Docker** | (Optional) | WeChat sources via WeWe RSS |
+| **Rust** | (Optional) | Build desktop widget from source |
+
+### 1. Clone & Install
 
 ```bash
 git clone https://github.com/LearningByDoingNow/ai-hub.git
 cd ai-hub
-npm install        # Installs deps + auto-initializes database with default sources
+npm install        # Installs dependencies + auto-initializes SQLite database with 77+ default sources
 ```
 
-### Configure LLM (Optional, for AI Chat)
+### 2. First Data Fetch
+
+```bash
+npm run fetch:all        # Fetches news + papers from all 77+ sources (~8 seconds)
+```
+
+This pulls the latest content into the local SQLite database. You can re-run anytime to get fresh data.
+
+### 3. Start WebUI
+
+```bash
+npm run dev              # Start development server at http://localhost:3000
+```
+
+Open http://localhost:3000 — you'll see all aggregated content immediately.
+
+### 4. Configure LLM (Optional — for AI Chat)
 
 ```bash
 cp .env.example .env.local
-# Edit .env.local with your LLM API key
 ```
 
-Supports any OpenAI-compatible API (OpenAI, Anthropic, DeepSeek, GLM, Ollama, etc.)
+Edit `.env.local`:
+```env
+LLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4   # Or any OpenAI-compatible endpoint
+LLM_API_KEY=your_api_key_here
+LLM_MODEL=glm-4.5-air                                # Model name
+LLM_TEMPERATURE=0.5
+```
 
-### Run
+Supported providers: OpenAI, Anthropic, DeepSeek, GLM (智谱), Together AI, Groq, SiliconFlow, Ollama (local), etc.
+
+You can also configure LLM directly in the WebUI: **Settings → LLM Configuration** (with quick-select presets).
+
+---
+
+## Available Commands
+
+### Data Fetching
+
+| Command | Description |
+|---------|-------------|
+| `npm run fetch:all` | One-shot: fetch news + papers from all sources (~8s) |
+| `npm run fetch` | One-shot: fetch news only |
+| `npm run fetch:papers` | One-shot: fetch arXiv papers only |
+| `npm run fetch:schedule` | Loop: auto-fetch every 4 hours (runs in foreground) |
+
+### WebUI
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server with hot-reload (http://localhost:3000) |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+
+### Desktop Widget
+
+| Command | Description |
+|---------|-------------|
+| `npm run desktop:install` | Install desktop dependencies |
+| `npm run desktop:dev` | Start desktop widget in dev mode (hot-reload) |
+| `npm run desktop:build` | Build .app and .dmg for distribution |
+
+### Quick Launch (Full Stack)
+
+Open **3 terminals** for the complete experience:
 
 ```bash
-npm run fetch:all  # First fetch — pulls data from all 77+ sources (~8 seconds)
-npm run dev        # Start WebUI at http://localhost:3000
+# Terminal 1: Start WeWe RSS (if using WeChat sources)
+docker start wewe-rss
+
+# Terminal 2: Start WebUI
+npm run dev
+
+# Terminal 3: Start Desktop Widget
+npm run desktop:dev
 ```
 
-That's it! Open http://localhost:3000 to see your aggregated content.
+Or a minimal single-terminal start:
+```bash
+npm run fetch:all && npm run dev
+```
 
-### Auto-fetch (Optional)
+### Auto-fetch Options
 
-Set up automatic fetching via:
-- **WebUI**: Settings → Data Fetching → Set interval
-- **Desktop Widget**: Settings → Set interval
-- **Cron job**: `npm run fetch:schedule` (runs every 4 hours)
+| Method | How |
+|--------|-----|
+| **WebUI** | Settings → Data Fetching → Set interval (e.g., 60 mins) |
+| **Desktop Widget** | Settings → Set interval |
+| **Terminal** | `npm run fetch:schedule` (every 4 hours, foreground) |
+| **System cron** | `crontab -e` → `0 */4 * * * cd /path/to/ai-hub && npm run fetch:all` |
 
 ---
 
