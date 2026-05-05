@@ -8,7 +8,7 @@ import ViewToggle, { type ViewMode } from "@/components/ViewToggle";
 import SearchBar from "@/components/SearchBar";
 import SourceFilter, { useSourceFilter, filterBySource } from "@/components/SourceFilter";
 
-export default function NewsClient({ newsItems }: { newsItems: NewsItem[] }) {
+export default function NewsClient({ newsItems, categoryMap }: { newsItems: NewsItem[]; categoryMap?: Record<string, string> }) {
   const { t } = useLocale();
   const [view, setView] = useState<ViewMode>("list");
   const [query, setQuery] = useState("");
@@ -20,7 +20,7 @@ export default function NewsClient({ newsItems }: { newsItems: NewsItem[] }) {
   );
 
   const filtered = useMemo(() => {
-    let items = filterBySource(newsItems, filterState);
+    let items = filterBySource(newsItems, filterState, categoryMap);
     if (query.trim()) {
       const q = query.toLowerCase();
       items = items.filter((item) =>
@@ -31,7 +31,7 @@ export default function NewsClient({ newsItems }: { newsItems: NewsItem[] }) {
       );
     }
     return items;
-  }, [newsItems, query, filterState]);
+  }, [newsItems, query, filterState, categoryMap]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -52,7 +52,7 @@ export default function NewsClient({ newsItems }: { newsItems: NewsItem[] }) {
       </div>
 
       <div className="mb-6">
-        <SourceFilter sources={allSources} state={filterState} onChange={setFilterState} />
+        <SourceFilter sources={allSources} state={filterState} onChange={setFilterState} categoryMap={categoryMap} />
       </div>
 
       {filtered.length === 0 ? (

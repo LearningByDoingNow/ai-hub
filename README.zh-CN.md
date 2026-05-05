@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/screenshots/readme-1.png" alt="AI Hub" width="280" />
+  <img src="docs/screenshots_new/home_0.png" alt="AI Hub" width="100%" />
 </p>
 
 <p align="center">
@@ -21,85 +21,93 @@
 
 ---
 
-## 预览
-
-<p align="center">
-  <img src="docs/screenshots/home.png" alt="首页" width="100%" />
-</p>
-
-<details>
-<summary><strong>暗黑模式</strong></summary>
-<img src="docs/screenshots/home-dark.png" alt="首页暗黑" width="100%" />
-</details>
-
----
-
 ## 项目简介
 
-AI Hub 自动聚合 **70+ 全球优质信息源**的内容，涵盖 AI 科技、学术论文、国际时政等领域。提供现代化 WebUI 和原生 macOS 桌面组件，共享同一数据引擎。
+AI Hub 自动聚合 **77+ 全球优质信息源**的内容，涵盖 AI 科技、学术论文、国际时政等领域。提供现代化 WebUI 和原生 macOS 桌面组件，共享同一数据引擎和数据库。
 
 **两种使用方式：**
-- **WebUI** — 功能完整的网页界面（搜索、设置、AI 对话、收藏等）
-- **桌面组件** — 轻量浮动组件（实时通知、AI 对话、设置）
+- **WebUI** — 功能完整的网页界面（搜索、过滤、收藏、设置、AI 对话）
+- **桌面组件** — 轻量浮动组件（实时通知、收藏、AI 助手）
 
-两者共享相同数据库和配置，可单独使用也可配合使用。
+两者共享相同数据库 — 收藏、已读状态、数据源配置实时同步。
 
 ---
 
 ## 核心功能
 
 ### 智能聚合引擎
-- **70+ 精选数据源** — OpenAI、DeepMind、TechCrunch、BBC、金融时报、arXiv 等
+- **77+ 精选数据源** — OpenAI、DeepMind、TechCrunch、BBC、金融时报、arXiv 等
 - **智能过滤** — AI 相关性检测、7 天时效性窗口、去重
 - **并行抓取** — 所有源并发请求，30 秒截止，全部完成仅需 ~8 秒
 - **定时自动抓取** — 任意间隔（1 分钟到数小时），后台静默运行
 
+---
+
 ### WebUI 网页端
 
-#### AI 资讯聚合
-实时聚合顶级 AI 信息源，精确显示文章发布时间与时效性色彩。
+#### 首页
+暗色主题仪表盘，包含统计概览、最新资讯、近期论文和精选 AI 产品。
 
-<img src="docs/screenshots/ai-news.png" alt="AI 资讯" width="100%" />
+<img src="docs/screenshots_new/home_1.png" alt="首页 - 资讯" width="100%" />
+
+<img src="docs/screenshots_new/home_2.png" alt="首页 - 论文" width="100%" />
+
+<img src="docs/screenshots_new/home_3.png" alt="首页 - 产品" width="100%" />
+
+#### AI 资讯聚合
+实时聚合顶级 AI 信息源，支持来源分类过滤（Twitter、微信、RSS）和搜索。
+
+https://github.com/user-attachments/assets/placeholder-ai-news
+
+> 视频：`docs/screenshots_new/ai-0.mov`
 
 #### 论文追踪
-追踪 arXiv 最新论文（cs.AI、cs.LG、cs.CL、cs.CV）。
+追踪 arXiv 最新论文（cs.AI、cs.LG、cs.CL、cs.CV），直达论文和 PDF 链接。
 
-<img src="docs/screenshots/paper-tarck.png" alt="论文追踪" width="100%" />
+<img src="docs/screenshots_new/paper.png" alt="论文追踪" width="100%" />
 
 #### 国际时政
-BBC、金融时报、纽约时报、卫报等全球新闻覆盖。
+BBC、金融时报、纽约时报、路透社、卫报等全球新闻覆盖，支持来源过滤。
 
-<img src="docs/screenshots/world-news.png" alt="国际时政" width="100%" />
+<img src="docs/screenshots_new/worldnews.png" alt="国际时政" width="100%" />
 
 #### AI 产品导航
-浏览 59+ AI 公司，9 大分类，直达官网和 API。
+浏览 59+ AI 公司，9 大分类，直达官网、API 和文档。
 
-<img src="docs/screenshots/ai-product.png" alt="AI 产品" width="100%" />
+https://github.com/user-attachments/assets/placeholder-ai-product
 
-#### AI 智能助手
-流式 AI 对话，支持 `@` 引用平台文章进行分析总结。
+> 视频：`docs/screenshots_new/ai_product.mov`
 
-<img src="docs/screenshots/chat-with-ai.png" alt="AI 对话" width="100%" />
+#### 收藏夹
+统一收藏系统，WebUI 与桌面组件共享 — 跨端管理你的书签。
+
+<img src="docs/screenshots_new/shoucang.png" alt="收藏夹" width="100%" />
 
 #### 设置与配置
-LLM 配置、数据源管理、定时抓取设置。
 
-<img src="docs/screenshots/settring-dark.png" alt="设置" width="100%" />
+完整的设置面板，5 个标签页：
 
-#### 模块管理
-自定义内容模块，按主题组织信息流 — 名称、图标、排序完全可配置。
+| 标签页 | 说明 |
+|--------|------|
+| 数据抓取 | 一键抓取、定时抓取间隔、最近抓取记录 |
+| 模块管理 | 创建/编辑内容模块（AI 资讯、论文、国际时政等） |
+| 数据源 | 管理 77+ RSS 数据源，指定所属模块 |
+| 产品管理 | AI 产品导航的增删改查 |
+| LLM 配置 | 快速选择预设（OpenAI、Anthropic、DeepSeek、GLM 等） |
 
-<img src="docs/screenshots/module.png" alt="模块管理" width="100%" />
+<img src="docs/screenshots_new/setting_0.png" alt="设置 - 数据抓取" width="100%" />
+<img src="docs/screenshots_new/setting_module_2.png" alt="设置 - 模块管理" width="100%" />
+<img src="docs/screenshots_new/setting_datasource_3.png" alt="设置 - 数据源" width="100%" />
+<img src="docs/screenshots_new/setting_product_4.png" alt="设置 - 产品管理" width="100%" />
+<img src="docs/screenshots_new/setting_llmconfig_5.png" alt="设置 - LLM 配置" width="100%" />
 
-#### 数据源管理
-添加、编辑、管理 RSS 数据源，指定所属模块，灵活组织内容。
+https://github.com/user-attachments/assets/placeholder-setting-fetch
 
-<img src="docs/screenshots/data-resource.png" alt="数据源" width="100%" />
+> 视频：`docs/screenshots_new/setting_fetch_data_1.mov`
 
-#### AI 公司管理
-AI 产品导航的完整管理 — 增删改查公司信息、分类、链接、标签。
+https://github.com/user-attachments/assets/placeholder-setting-llm
 
-<img src="docs/screenshots/ai-enterprise.png" alt="AI 公司管理" width="100%" />
+> 视频：`docs/screenshots_new/setting_llm_config.mov`
 
 ---
 
@@ -110,29 +118,31 @@ AI 产品导航的完整管理 — 增删改查公司信息、分类、链接、
 <table>
 <tr>
 <td width="50%">
-<strong>浮动 Logo 特效</strong><br/>
-<img src="docs/screenshots/desktop-app-widget.png" alt="桌面组件" width="100%" />
-<br/><sub>轨道粒子 + 彩虹光环 + 星光闪烁</sub>
-</td>
-<td width="50%">
 <strong>展开卡片列表</strong><br/>
-<img src="docs/screenshots/desktop-app-list.jpg" alt="卡片列表" width="100%" />
-<br/><sub>点击展开，点击外部收起</sub>
+<img src="docs/screenshots_new/desktop_1.png" alt="桌面组件" width="100%" />
+<br/><sub>已读标记、收藏、来源过滤、关闭卡片</sub>
 </td>
-</tr>
-<tr>
 <td width="50%">
 <strong>桌面全景</strong><br/>
-<img src="docs/screenshots/desktop-app.jpg" alt="全景" width="100%" />
-<br/><sub>组件 + 设置 + AI 对话并排使用</sub>
-</td>
-<td width="50%">
-<strong>AI 助手</strong><br/>
-<img src="docs/screenshots/desktop-ai-assistant.jpg" alt="AI 助手" width="100%" />
-<br/><sub>流式输出 + @ 引用文章分析</sub>
+<img src="docs/screenshots_new/desktop_2.png" alt="全景" width="100%" />
+<br/><sub>组件 + AI 对话 + 设置并排使用</sub>
 </td>
 </tr>
 </table>
+
+https://github.com/user-attachments/assets/placeholder-ai-video
+
+> 视频：`docs/screenshots_new/ai-video.mov`
+
+**组件功能：**
+- 浮动 Logo 粒子特效 — 点击展开
+- 来源分类过滤标签（全部、Twitter、微信、RSS、国际时政）
+- 已读追踪（重启后保留）
+- 收藏功能（与 WebUI 同步）
+- 逐条关闭或一键清空
+- AI 对话助手（流式输出）
+- 设置面板（LLM 配置）
+- 拖拽移动位置，拖拽底部调整高度
 
 ---
 
@@ -157,16 +167,22 @@ cp .env.example .env.local
 # 编辑 .env.local 填入你的 LLM API 密钥
 ```
 
-支持任何 OpenAI 兼容 API（OpenAI、智谱、DeepSeek、Ollama 等）
+支持任何 OpenAI 兼容 API（OpenAI、Anthropic、DeepSeek、GLM、Ollama 等）
 
 ### 运行
 
 ```bash
-npm run fetch:all  # 首次抓取（从 70+ 源拉取数据，约 8 秒）
+npm run fetch:all  # 首次抓取（从 77+ 源拉取数据，约 8 秒）
 npm run dev        # 启动 WebUI http://localhost:3000
 ```
 
 打开 http://localhost:3000 即可使用。
+
+### 定时抓取（可选）
+
+- **WebUI**: 设置 → 数据抓取 → 设置间隔
+- **桌面组件**: 设置 → 设置间隔
+- **Cron**: `npm run fetch:schedule`（每 4 小时执行）
 
 ---
 
@@ -188,9 +204,46 @@ npm run desktop:build
 > ```bash
 > xattr -cr /Applications/AI\ Hub.app
 > ```
-> 这是未签名应用的正常现象，需要 Apple 开发者证书（$99/年）才能避免。
+> 这是未签名应用的正常现象。
 
-> **DMG 功能限制：** 独立安装包自带预装数据（59 家公司、70+ 数据源、200+ 篇资讯），可直接查看和 AI 对话。但**无法抓取新数据**（需要完整项目目录 + Node.js）。如需完整功能请 clone 仓库使用。
+> **DMG 功能限制：** 独立安装包自带预装数据，可直接查看和 AI 对话。但**无法抓取新数据**（需要完整项目目录 + Node.js）。如需完整功能请 clone 仓库使用。
+
+---
+
+## 架构
+
+```
+ai-hub/
+├── src/                  # Next.js WebUI (App Router)
+│   ├── app/             # 页面 + API 路由
+│   ├── components/      # React 组件
+│   ├── lib/             # SQLite 查询、工具函数
+│   └── i18n/            # 中英文翻译
+├── desktop/              # Tauri 桌面组件
+│   ├── src/             # React 前端
+│   └── src-tauri/       # Rust 后端
+├── scripts/              # 数据抓取引擎
+│   ├── engine.mjs       # 并行抓取主引擎
+│   ├── fetch-papers.mjs # arXiv 论文抓取
+│   └── fetchers/        # RSS、网页、API 策略
+├── data/                 # SQLite 数据库
+│   └── ai-hub.db        # WebUI 和桌面组件共享
+└── public/              # 静态资源
+```
+
+### 数据流
+
+```
+RSS/API 数据源 → engine.mjs (并行抓取 + 过滤)
+                       ↓
+              SQLite (data/ai-hub.db)
+                   ↙        ↘
+          Next.js WebUI    Tauri 桌面组件
+              ↓                    ↓
+        浏览器 (SSR)        原生 macOS 窗口
+```
+
+两端读写同一数据库 — 收藏、数据源、配置自动同步。
 
 ---
 
@@ -203,6 +256,7 @@ npm run desktop:build
 | 数据库 | SQLite (better-sqlite3) WAL 模式 |
 | AI 对话 | OpenAI 兼容 API, SSE 流式 |
 | 数据抓取 | rss-parser, 并行+截止时间 |
+| 部署 | Vercel (WebUI), GitHub Releases (桌面端) |
 
 ---
 

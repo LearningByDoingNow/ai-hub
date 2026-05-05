@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/screenshots/readme-1.png" alt="AI Hub" width="280" />
+  <img src="docs/screenshots_new/home_0.png" alt="AI Hub" width="100%" />
 </p>
 
 <p align="center">
@@ -21,90 +21,93 @@
 
 ---
 
-## Preview
-
-<p align="center">
-  <img src="docs/screenshots/home.png" alt="Homepage" width="100%" />
-</p>
-
-<details>
-<summary><strong>Dark Mode</strong></summary>
-<img src="docs/screenshots/home-dark.png" alt="Homepage Dark" width="100%" />
-</details>
-
----
-
 ## What is AI Hub?
 
-AI Hub automatically aggregates content from **70+ premium global sources** across multiple domains — AI technology, academic papers, international affairs, and more. It features a modern WebUI and a native macOS desktop widget, both powered by the same data engine.
+AI Hub automatically aggregates content from **77+ premium global sources** across multiple domains — AI technology, academic papers, international affairs, and more. It features a modern WebUI and a native macOS desktop widget, both powered by the same data engine and sharing a unified database.
 
 **Two ways to use:**
-- **WebUI** — Full-featured web interface with search, settings, AI chat
-- **Desktop Widget** — Lightweight floating widget with real-time notifications
+- **WebUI** — Full-featured web interface with search, filtering, favorites, settings, AI chat
+- **Desktop Widget** — Lightweight floating widget with real-time notifications, favorites, and AI assistant
 
-Both share the same database and configuration. Use one or both.
+Both share the same database and configuration — favorites, read status, and sources stay in sync.
 
 ---
 
 ## Features
 
 ### Intelligent Aggregation Engine
-- **70+ curated data sources** — OpenAI, DeepMind, TechCrunch, BBC, Financial Times, arXiv, and more
+- **77+ curated data sources** — OpenAI, DeepMind, TechCrunch, BBC, Financial Times, arXiv, and more
 - **Smart filtering** — AI-relevance detection, 7-day freshness window, duplicate prevention
 - **Parallel fetching** — All sources fetched concurrently with 30s deadline, completes in ~8 seconds
 - **Configurable auto-fetch** — Set any interval (1min to hours), runs in background
 
+---
+
 ### WebUI
 
-#### AI News Aggregation
-Real-time AI news from top sources with precise publish timestamps and freshness indicators.
+#### Homepage
+Dark-themed dashboard with stats overview, latest news, recent papers, and featured AI products.
 
-<img src="docs/screenshots/ai-news.png" alt="AI News" width="100%" />
+<img src="docs/screenshots_new/home_1.png" alt="Homepage - News" width="100%" />
+
+<img src="docs/screenshots_new/home_2.png" alt="Homepage - Papers" width="100%" />
+
+<img src="docs/screenshots_new/home_3.png" alt="Homepage - Products" width="100%" />
+
+#### AI News Aggregation
+Real-time AI news from top sources with source-type filtering (Twitter, WeChat, RSS) and search.
+
+https://github.com/user-attachments/assets/placeholder-ai-news
+
+> Video: `docs/screenshots_new/ai-0.mov`
 
 #### Paper Tracker
-Track cutting-edge research papers from arXiv (cs.AI, cs.LG, cs.CL, cs.CV).
+Track cutting-edge research papers from arXiv (cs.AI, cs.LG, cs.CL, cs.CV) with direct links to papers and PDFs.
 
-<img src="docs/screenshots/paper-tarck.png" alt="Paper Tracker" width="100%" />
+<img src="docs/screenshots_new/paper.png" alt="Paper Tracker" width="100%" />
 
 #### World News
-International affairs coverage from BBC, Financial Times, NYT, Guardian, and more.
+International affairs coverage from BBC, Financial Times, NYT, Reuters, Guardian, and more — with source filtering.
 
-<img src="docs/screenshots/world-news.png" alt="World News" width="100%" />
+<img src="docs/screenshots_new/worldnews.png" alt="World News" width="100%" />
 
 #### AI Products Directory
-Browse 59+ AI companies across 9 categories with direct links to official sites and APIs.
+Browse 59+ AI companies across 9 categories with direct links to official sites, APIs, and documentation.
 
-<img src="docs/screenshots/ai-product.png" alt="AI Products" width="100%" />
+https://github.com/user-attachments/assets/placeholder-ai-product
 
-#### AI Chat Assistant
-Streaming AI chat with `@` article references — ask questions about any article in the platform.
+> Video: `docs/screenshots_new/ai_product.mov`
 
-<img src="docs/screenshots/chat-with-ai.png" alt="AI Chat" width="100%" />
+#### Favorites
+Unified favorites system shared between WebUI and Desktop Widget — save and manage your bookmarks.
+
+<img src="docs/screenshots_new/shoucang.png" alt="Favorites" width="100%" />
 
 #### Settings & Configuration
-Configure LLM, manage data sources, set auto-fetch intervals, and more.
 
-<img src="docs/screenshots/settring-dark.png" alt="Settings" width="100%" />
+Comprehensive settings panel with 5 tabs:
 
-<details>
-<summary><strong>LLM Configuration</strong></summary>
-<img src="docs/screenshots/setting-dark-lllm.png" alt="LLM Settings" width="100%" />
-</details>
+| Tab | Description |
+|-----|-------------|
+| Data Fetching | One-click fetch, auto-fetch interval, recent fetch history |
+| Module Management | Create/edit content modules (AI News, Papers, World News, etc.) |
+| Data Sources | Manage 77+ RSS sources, assign to modules |
+| Product Management | CRUD for AI products directory |
+| LLM Configuration | Quick-select presets (OpenAI, Anthropic, DeepSeek, GLM, etc.) |
 
-#### Module Management
-Create custom content modules to organize feeds by topic — fully configurable names, icons, and sort order.
+<img src="docs/screenshots_new/setting_0.png" alt="Settings - Data Fetch" width="100%" />
+<img src="docs/screenshots_new/setting_module_2.png" alt="Settings - Modules" width="100%" />
+<img src="docs/screenshots_new/setting_datasource_3.png" alt="Settings - Data Sources" width="100%" />
+<img src="docs/screenshots_new/setting_product_4.png" alt="Settings - Products" width="100%" />
+<img src="docs/screenshots_new/setting_llmconfig_5.png" alt="Settings - LLM" width="100%" />
 
-<img src="docs/screenshots/module.png" alt="Module Management" width="100%" />
+https://github.com/user-attachments/assets/placeholder-setting-fetch
 
-#### Data Sources
-Add, edit, and manage RSS feeds. Assign each source to a module for organized content delivery.
+> Video: `docs/screenshots_new/setting_fetch_data_1.mov`
 
-<img src="docs/screenshots/data-resource.png" alt="Data Sources" width="100%" />
+https://github.com/user-attachments/assets/placeholder-setting-llm
 
-#### AI Company Management
-Full CRUD for the AI products directory — add companies, set categories, manage links and tags.
-
-<img src="docs/screenshots/ai-enterprise.png" alt="AI Company Management" width="100%" />
+> Video: `docs/screenshots_new/setting_llm_config.mov`
 
 ---
 
@@ -115,29 +118,31 @@ A native floating widget that lives on your desktop — always accessible, never
 <table>
 <tr>
 <td width="50%">
-<strong>Floating Logo with Effects</strong><br/>
-<img src="docs/screenshots/desktop-app-widget.png" alt="Desktop Widget" width="100%" />
-<br/><sub>Orbital particles, rainbow aura, sparkle effects</sub>
-</td>
-<td width="50%">
 <strong>Expanded Card List</strong><br/>
-<img src="docs/screenshots/desktop-app-list.jpg" alt="Desktop List" width="100%" />
-<br/><sub>Click logo to expand, click outside to collapse</sub>
+<img src="docs/screenshots_new/desktop_1.png" alt="Desktop Widget" width="100%" />
+<br/><sub>Read status, favorites, source filtering, dismiss cards</sub>
 </td>
-</tr>
-<tr>
 <td width="50%">
 <strong>Full Desktop View</strong><br/>
-<img src="docs/screenshots/desktop-app.jpg" alt="Desktop Full" width="100%" />
-<br/><sub>Widget + Settings + AI Chat side by side</sub>
-</td>
-<td width="50%">
-<strong>AI Assistant</strong><br/>
-<img src="docs/screenshots/desktop-ai-assistant.jpg" alt="Desktop AI" width="100%" />
-<br/><sub>Streaming chat with @ article references</sub>
+<img src="docs/screenshots_new/desktop_2.png" alt="Desktop Full" width="100%" />
+<br/><sub>Widget + AI Chat + Settings side by side</sub>
 </td>
 </tr>
 </table>
+
+https://github.com/user-attachments/assets/placeholder-ai-video
+
+> Video: `docs/screenshots_new/ai-video.mov`
+
+**Widget Features:**
+- Floating logo with particle effects — click to expand
+- Source-type filter tabs (All, Twitter, WeChat, RSS, World)
+- Read tracking (persisted across restarts)
+- Favorites (synced with WebUI)
+- Dismiss individual cards or clear all
+- AI Chat assistant with streaming responses
+- Settings panel with LLM configuration
+- Drag to reposition, resize by dragging bottom edge
 
 ---
 
@@ -162,12 +167,12 @@ cp .env.example .env.local
 # Edit .env.local with your LLM API key
 ```
 
-Supports any OpenAI-compatible API (OpenAI, ZhipuAI, DeepSeek, Ollama, etc.)
+Supports any OpenAI-compatible API (OpenAI, Anthropic, DeepSeek, GLM, Ollama, etc.)
 
 ### Run
 
 ```bash
-npm run fetch:all  # First fetch — pulls data from all 70+ sources (~8 seconds)
+npm run fetch:all  # First fetch — pulls data from all 77+ sources (~8 seconds)
 npm run dev        # Start WebUI at http://localhost:3000
 ```
 
@@ -207,9 +212,9 @@ Download from [GitHub Releases](https://github.com/LearningByDoingNow/ai-hub/rel
 > ```bash
 > xattr -cr /Applications/AI\ Hub.app
 > ```
-> This is normal for unsigned apps. An Apple Developer certificate ($99/year) is needed to avoid this.
+> This is normal for unsigned apps.
 
-> **DMG Limitations:** The standalone DMG includes pre-bundled data (59 companies, 70+ sources, 200+ articles) for immediate viewing and AI chat. However, **fetching new data is not available** without the full project directory + Node.js. For full functionality including auto-fetch, clone the repository instead.
+> **DMG Limitations:** The standalone DMG includes pre-bundled data for immediate viewing and AI chat. However, **fetching new data is not available** without the full project directory + Node.js. For full functionality including auto-fetch, clone the repository instead.
 
 ---
 
@@ -245,6 +250,8 @@ RSS/API Sources → engine.mjs (parallel fetch + filter)
               ↓                    ↓
         Browser (SSR)     Native macOS Window
 ```
+
+Both apps read/write the same database — favorites, sources, and configuration stay in sync automatically.
 
 ---
 

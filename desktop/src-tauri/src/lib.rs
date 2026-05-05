@@ -244,6 +244,26 @@ fn search_content(query: String) -> Result<Vec<serde_json::Value>, String> {
 }
 
 #[tauri::command]
+fn add_favorite(id: String, item_type: String, title: String, url: String) -> Result<(), String> {
+    db::add_favorite(&id, &item_type, &title, &url)
+}
+
+#[tauri::command]
+fn remove_favorite(id: String) -> Result<(), String> {
+    db::remove_favorite(&id)
+}
+
+#[tauri::command]
+fn get_favorite_ids() -> Result<Vec<String>, String> {
+    db::fetch_favorite_ids()
+}
+
+#[tauri::command]
+fn get_source_categories() -> Result<Vec<db::SourceCategory>, String> {
+    db::fetch_source_categories()
+}
+
+#[tauri::command]
 async fn resize_widget(app: AppHandle, width: f64, height: f64) -> Result<(), String> {
     if let Some(win) = app.get_webview_window("widget") {
         win.set_size(LogicalSize::new(width, height))
@@ -400,6 +420,10 @@ pub fn run() {
             save_config_value,
             trigger_fetch,
             search_content,
+            add_favorite,
+            remove_favorite,
+            get_favorite_ids,
+            get_source_categories,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

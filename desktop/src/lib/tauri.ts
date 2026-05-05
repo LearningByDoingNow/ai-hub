@@ -62,6 +62,19 @@ export async function openChatWindow(): Promise<void> {
   return invoke("open_chat_window");
 }
 
+export interface SourceCategory {
+  name: string;
+  display_category: string;
+}
+
+export async function getSourceCategories(): Promise<SourceCategory[]> {
+  return invoke("get_source_categories");
+}
+
+export async function getFavoriteIds(): Promise<string[]> {
+  return invoke("get_favorite_ids");
+}
+
 export async function resizeWidget(width: number, height: number): Promise<void> {
   return invoke("resize_widget", { width, height });
 }

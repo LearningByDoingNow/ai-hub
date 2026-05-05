@@ -27,8 +27,8 @@ const MOCK_PAPERS: Paper[] = [
 ];
 
 type NotifCard =
-  | { type: "news"; data: NewsItem; uid: string; exiting: boolean }
-  | { type: "paper"; data: Paper; uid: string; exiting: boolean };
+  | { type: "news"; data: NewsItem; uid: string; exiting: boolean; read: boolean; favorited: boolean }
+  | { type: "paper"; data: Paper; uid: string; exiting: boolean; read: boolean; favorited: boolean };
 
 function timeAgo(dateStr: string): string {
   if (!dateStr) return "";
@@ -69,10 +69,11 @@ function getFreshness(dateStr: string): number {
   return 0.05;
 }
 
-function CardItem({ card, onDismiss, onClick }: {
+function CardItem({ card, onDismiss, onClick, onFavorite }: {
   card: NotifCard;
   onDismiss: () => void;
   onClick: () => void;
+  onFavorite: () => void;
 }) {
   const isNews = card.type === "news";
   const title = isNews ? (card.data.title || card.data.title_en) : card.data.title;
@@ -80,7 +81,6 @@ function CardItem({ card, onDismiss, onClick }: {
     ? (card.data.summary || card.data.summary_en)
     : card.data.authors?.slice(0, 3).join(", ") || "";
   const badge = isNews ? card.data.source : (card.data.venue || "Paper");
-  const freshness = getFreshness(card.data.date);
 
   return (
     <div className={card.exiting ? "card-slide-out" : "card-slide-in"}>
@@ -89,21 +89,30 @@ function CardItem({ card, onDismiss, onClick }: {
         className="group relative cursor-pointer active:scale-[0.98] transition-transform"
       >
         <div
-          className={`relative rounded-xl overflow-hidden border backdrop-blur-xl shadow-lg ${
-            freshness >= 0.8
-              ? (isNews ? "bg-blue-50/95 dark:bg-blue-950/40 border-blue-300/50" : "bg-purple-50/95 dark:bg-purple-950/40 border-purple-300/50")
-              : freshness >= 0.4
-                ? (isNews ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/30" : "bg-purple-50/50 dark:bg-purple-950/20 border-purple-200/30")
-                : (isNews ? "bg-white/90 dark:bg-[#1a1d2e]/90 border-slate-200/30 dark:border-slate-500/10" : "bg-white/90 dark:bg-[#1e1a2e]/90 border-slate-200/30 dark:border-slate-500/10")
-          }`}
+          className="relative rounded-xl overflow-hidden border shadow-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
         >
 
-          <button
-            onClick={(e) => { e.stopPropagation(); onDismiss(); }}
-            className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 dark:bg-white/10 hover:bg-red-500 hover:text-white text-slate-400 z-10"
-          >
-            <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-          </button>
+          <div className={`absolute top-2 right-2 flex items-center gap-1 transition-opacity z-10 ${
+            card.favorited ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          }`}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onFavorite(); }}
+              className={`w-5 h-5 flex items-center justify-center rounded-full transition-colors ${
+                card.favorited
+                  ? "bg-amber-400 text-white shadow-sm"
+                  : "bg-black/5 dark:bg-white/10 hover:bg-amber-400 hover:text-white text-slate-400"
+              }`}
+              title={card.favorited ? "取消收藏" : "收藏"}
+            >
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+              className="w-5 h-5 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-red-500 hover:text-white text-slate-400"
+            >
+              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+            </button>
+          </div>
 
           <div className="px-3.5 py-2.5">
             <div className="flex items-center gap-2 mb-1">
@@ -114,7 +123,10 @@ function CardItem({ card, onDismiss, onClick }: {
               }`}>
                 {badge}
               </span>
-              <span className="text-[10px] text-slate-400 ml-auto mr-5">{timeAgo(card.data.date)}</span>
+              {card.read && (
+                <span className="text-[8px] text-green-600 dark:text-green-400 bg-green-100/60 dark:bg-green-900/30 px-1.5 py-0.5 rounded font-medium">✓ 已读</span>
+              )}
+              <span className="text-[10px] text-slate-400 ml-auto mr-12">{timeAgo(card.data.date)}</span>
             </div>
             <h3 className="text-[12px] font-semibold leading-snug text-slate-800 dark:text-white line-clamp-2">
               {title}
@@ -132,26 +144,15 @@ function CardItem({ card, onDismiss, onClick }: {
 type WidgetFilterType = "all" | "twitter" | "wechat" | "rss" | "world";
 
 const WIDGET_FILTER_KEY = "ai-hub-widget-filter";
+const READ_IDS_KEY = "ai-hub-widget-read";
 
-const WECHAT_SOURCES = [
-  "机器之心", "量子位", "九万里", "新智元", "AI前线", "智猩猩AI",
-  "36氪(微信)", "电手", "数字生命卡兹克",
-];
-
-const WORLD_SOURCES = [
-  "人民日报", "央视军事", "外军防务研究前沿",
-  "BBC World News", "Reuters World", "The Guardian World", "Financial Times",
-  "New York Times World", "AP News World", "RFI 法广中文", "Al Jazeera",
-  "Sky News World", "France 24", "Nikkei Asia", "中国新闻网",
-  "Twitter: Reuters", "Twitter: AP", "Twitter: BBC Breaking",
-  "Twitter: CNN Breaking", "Twitter: Al Jazeera",
-];
-
-function getCardSourceType(source: string): WidgetFilterType {
-  if (source.startsWith("Twitter:") && !WORLD_SOURCES.includes(source)) return "twitter";
-  if (WECHAT_SOURCES.includes(source)) return "wechat";
-  if (WORLD_SOURCES.includes(source)) return "world";
-  return "rss";
+function loadReadIds(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(READ_IDS_KEY) || "[]")); } catch { return new Set(); }
+}
+function saveReadId(id: string) {
+  const ids = loadReadIds();
+  ids.add(id);
+  localStorage.setItem(READ_IDS_KEY, JSON.stringify([...ids]));
 }
 
 export default function App() {
@@ -163,6 +164,7 @@ export default function App() {
   const [widgetFilter, setWidgetFilter] = useState<WidgetFilterType>(() => {
     try { return (localStorage.getItem(WIDGET_FILTER_KEY) as WidgetFilterType) || "all"; } catch { return "all"; }
   });
+  const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
   const logoRef = useRef<HTMLDivElement>(null);
   const resizingRef = useRef(false);
   const startYRef = useRef(0);
@@ -235,22 +237,39 @@ export default function App() {
         if (isTauri) {
           const t = await import("./lib/tauri");
           tauriLib = t;
-          [news, papers] = await Promise.all([
-            t.getNews(50, []),
-            t.getPapers(10),
+          const [newsData, papersData, categories, favIds] = await Promise.all([
+            t.getNews(500, []),
+            t.getPapers(50),
+            t.getSourceCategories(),
+            t.getFavoriteIds(),
+          ]);
+          news = newsData;
+          papers = papersData;
+          const map: Record<string, string> = {};
+          for (const c of categories) map[c.name] = c.display_category;
+          setCategoryMap(map);
+          const favSet = new Set(favIds);
+          const readSet = loadReadIds();
+          setCards([
+            ...news.map((n) => ({
+              type: "news" as const, data: n, uid: `n-${n.id}`, exiting: false, read: readSet.has(n.id), favorited: favSet.has(n.id),
+            })),
+            ...papers.map((p) => ({
+              type: "paper" as const, data: p, uid: `p-${p.id}`, exiting: false, read: readSet.has(p.id), favorited: favSet.has(p.id),
+            })),
           ]);
         } else {
           news = MOCK_NEWS;
           papers = MOCK_PAPERS;
+          setCards([
+            ...news.map((n) => ({
+              type: "news" as const, data: n, uid: `n-${n.id}`, exiting: false, read: false, favorited: false,
+            })),
+            ...papers.map((p) => ({
+              type: "paper" as const, data: p, uid: `p-${p.id}`, exiting: false, read: false, favorited: false,
+            })),
+          ]);
         }
-        setCards([
-          ...news.map((n) => ({
-            type: "news" as const, data: n, uid: `n-${n.id}`, exiting: false,
-          })),
-          ...papers.map((p) => ({
-            type: "paper" as const, data: p, uid: `p-${p.id}`, exiting: false,
-          })),
-        ]);
       } catch (e) {
         console.error(e);
       }
@@ -268,8 +287,8 @@ export default function App() {
       const unlisten = await listen<{ news: NewsItem[]; papers: Paper[] }>("new-items", (event) => {
         const { news, papers } = event.payload;
         const nc: NotifCard[] = [
-          ...news.map((n) => ({ type: "news" as const, data: n, uid: `n-${n.id}-${Date.now()}`, exiting: false })),
-          ...papers.map((p) => ({ type: "paper" as const, data: p, uid: `p-${p.id}-${Date.now()}`, exiting: false })),
+          ...news.map((n) => ({ type: "news" as const, data: n, uid: `n-${n.id}-${Date.now()}`, exiting: false, read: false, favorited: false })),
+          ...papers.map((p) => ({ type: "paper" as const, data: p, uid: `p-${p.id}-${Date.now()}`, exiting: false, read: false, favorited: false })),
         ];
         if (nc.length > 0) {
           setCards((prev) => [...nc, ...prev]);
@@ -398,7 +417,37 @@ export default function App() {
       const links = card.data.links;
       if (links?.[0]) tauriLib?.openInBrowser(links[0]);
     }
-    dismissCard(card.uid);
+    saveReadId(card.data.id);
+    setCards((prev) => prev.map((c) => c.uid === card.uid ? { ...c, read: true } : c));
+  }
+
+  async function favoriteCard(card: NotifCard) {
+    const wasFavorited = card.favorited;
+    setCards((prev) => prev.map((c) => c.uid === card.uid ? { ...c, favorited: !wasFavorited } : c));
+
+    const id = card.data.id;
+    const title = card.type === "news" ? (card.data.title || card.data.title_en) : card.data.title;
+    const url = card.type === "news" ? card.data.url : (card.data.links?.[0] || "");
+    try {
+      if (isTauri) {
+        const { invoke } = await import("@tauri-apps/api/core");
+        if (wasFavorited) {
+          await invoke("remove_favorite", { id });
+        } else {
+          await invoke("add_favorite", { id, itemType: card.type, title, url });
+        }
+      }
+    } catch (e) {
+      console.error("favorite failed:", e);
+      setCards((prev) => prev.map((c) => c.uid === card.uid ? { ...c, favorited: wasFavorited } : c));
+    }
+  }
+
+  function getCardSourceType(source: string): WidgetFilterType {
+    const cat = categoryMap[source];
+    if (cat) return cat as WidgetFilterType;
+    if (source.startsWith("Twitter:")) return "twitter";
+    return "rss";
   }
 
   const count = cards.filter((c) => !c.exiting).length;
@@ -554,6 +603,7 @@ export default function App() {
                   card={card}
                   onDismiss={() => dismissCard(card.uid)}
                   onClick={() => clickCard(card)}
+                  onFavorite={() => favoriteCard(card)}
                 />
               ))
             )}

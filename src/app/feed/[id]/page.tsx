@@ -19,5 +19,6 @@ export default async function FeedPage({ params }: { params: Promise<{ id: strin
     ? allNews.filter((n) => sourceNames.has(n.source))
     : [];
 
-  return <FeedClient moduleId={moduleId} newsItems={filtered} />;
+  const categoryMap = sqlite.getSourceCategoryMap();
+  return <FeedClient moduleId={moduleId} newsItems={filtered} categoryMap={categoryMap} />;
 }

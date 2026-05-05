@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LocaleProvider } from "@/i18n/context";
+import { FavoritesProvider } from "@/lib/favorites";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
@@ -38,11 +39,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-slate-50 dark:bg-slate-950">
         <LocaleProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <ChatWidget />
-          <AutoFetch />
+          <FavoritesProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <ChatWidget />
+            <AutoFetch />
+          </FavoritesProvider>
         </LocaleProvider>
       </body>
     </html>

@@ -14,14 +14,13 @@ interface FilterState {
 
 const DEFAULT_STATE: FilterState = { activeType: "all", hiddenSources: [] };
 
-const WECHAT_SOURCES = [
-  "机器之心", "量子位", "九万里", "新智元", "AI前线", "智猩猩AI",
-  "36氪(微信)", "电手", "数字生命卡兹克", "人民日报", "央视军事", "外军防务研究前沿",
-];
-
-function getSourceType(source: string): FilterType {
+function getSourceType(source: string, categoryMap?: Record<string, string>): FilterType {
+  if (categoryMap) {
+    const cat = categoryMap[source];
+    if (cat === "twitter" || cat === "wechat" || cat === "rss") return cat;
+    if (cat === "world") return "rss";
+  }
   if (source.startsWith("Twitter:")) return "twitter";
-  if (WECHAT_SOURCES.includes(source)) return "wechat";
   return "rss";
 }
 
@@ -42,14 +41,15 @@ function saveState(state: FilterState) {
 
 export function filterBySource<T extends { source: string }>(
   items: T[],
-  state: FilterState
+  state: FilterState,
+  categoryMap?: Record<string, string>
 ): T[] {
   if (state.activeType === "all" && state.hiddenSources.length === 0) return items;
 
   return items.filter((item) => {
     if (state.hiddenSources.includes(item.source)) return false;
     if (state.activeType === "all") return true;
-    return getSourceType(item.source) === state.activeType;
+    return getSourceType(item.source, categoryMap) === state.activeType;
   });
 }
 
@@ -72,10 +72,12 @@ export default function SourceFilter({
   sources,
   state,
   onChange,
+  categoryMap,
 }: {
   sources: string[];
   state: FilterState;
   onChange: (state: FilterState) => void;
+  categoryMap?: Record<string, string>;
 }) {
   const { locale } = useLocale();
   const [showCustom, setShowCustom] = useState(false);
@@ -101,11 +103,11 @@ export default function SourceFilter({
   const grouped = useMemo(() => {
     const map: Record<FilterType, string[]> = { all: [], twitter: [], wechat: [], rss: [] };
     for (const s of sources) {
-      const type = getSourceType(s);
+      const type = getSourceType(s, categoryMap);
       map[type].push(s);
     }
     return map;
-  }, [sources]);
+  }, [sources, categoryMap]);
 
   const customSources = state.activeType === "all" ? sources : (grouped[state.activeType] || []);
 

@@ -14,7 +14,7 @@ interface Module {
   nameEn: string;
 }
 
-export default function FeedClient({ moduleId, newsItems }: { moduleId: string; newsItems: NewsItem[] }) {
+export default function FeedClient({ moduleId, newsItems, categoryMap }: { moduleId: string; newsItems: NewsItem[]; categoryMap?: Record<string, string> }) {
   const { locale } = useLocale();
   const [view, setView] = useState<ViewMode>("list");
   const [module, setModule] = useState<Module | null>(null);
@@ -40,7 +40,7 @@ export default function FeedClient({ moduleId, newsItems }: { moduleId: string; 
   );
 
   const filtered = useMemo(() => {
-    let items = filterBySource(newsItems, filterState);
+    let items = filterBySource(newsItems, filterState, categoryMap);
     if (query.trim()) {
       const q = query.toLowerCase();
       items = items.filter((item) =>
@@ -70,7 +70,7 @@ export default function FeedClient({ moduleId, newsItems }: { moduleId: string; 
       </div>
 
       <div className="mb-6">
-        <SourceFilter sources={allSources} state={filterState} onChange={setFilterState} />
+        <SourceFilter sources={allSources} state={filterState} onChange={setFilterState} categoryMap={categoryMap} />
       </div>
 
       {filtered.length === 0 ? (

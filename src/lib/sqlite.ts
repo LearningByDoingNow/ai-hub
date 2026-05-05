@@ -19,6 +19,7 @@ export interface Source {
   enabled: boolean;
   module: string;
   moduleIds: string[];
+  displayCategory?: string;
 }
 
 const DB_PATH = path.join(process.cwd(), "data", "ai-hub.db");
@@ -55,6 +56,7 @@ function initTables(db: Database.Database) {
       url TEXT NOT NULL, lang TEXT NOT NULL DEFAULT 'en',
       enabled INTEGER NOT NULL DEFAULT 1, module TEXT NOT NULL DEFAULT 'news',
       module_ids TEXT NOT NULL DEFAULT '[]',
+      display_category TEXT NOT NULL DEFAULT 'rss',
       created_at TEXT DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS modules (
@@ -74,6 +76,18 @@ function initTables(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_papers_date ON papers(date DESC);
     CREATE INDEX IF NOT EXISTS idx_providers_category ON providers(category);
     CREATE INDEX IF NOT EXISTS idx_providers_country ON providers(country);
+  `);
+  migrateDisplayCategory(db);
+}
+
+function migrateDisplayCategory(db: Database.Database) {
+  const cols = db.prepare("PRAGMA table_info(sources)").all() as { name: string }[];
+  if (cols.some((c) => c.name === "display_category")) return;
+  db.exec(`
+    ALTER TABLE sources ADD COLUMN display_category TEXT NOT NULL DEFAULT 'rss';
+    UPDATE sources SET display_category = 'wechat' WHERE id LIKE 'wx-%';
+    UPDATE sources SET display_category = 'twitter' WHERE id LIKE 'x-%';
+    UPDATE sources SET display_category = 'world' WHERE module = '国际时政' AND display_category = 'rss';
   `);
 }
 
@@ -157,6 +171,7 @@ export function getSources(): Source[] {
     url: r.url as string, lang: r.lang as "zh" | "en",
     enabled: (r.enabled as number) === 1, module: r.module as string,
     moduleIds: r.module_ids ? JSON.parse(r.module_ids as string) : [r.module as string],
+    displayCategory: (r.display_category as string) || "rss",
   }); });
 }
 
@@ -165,6 +180,15 @@ export function getModules(): Module[] {
     id: r.id as string, name: r.name as string, nameEn: r.name_en as string,
     icon: r.icon as string, sortOrder: r.sort_order as number,
   }); });
+}
+
+export function getSourceCategoryMap(): Record<string, string> {
+  const rows = getDb().prepare("SELECT name, display_category FROM sources WHERE enabled = 1").all();
+  const map: Record<string, string> = {};
+  for (const row of rows as Record<string, unknown>[]) {
+    map[row.name as string] = row.display_category as string;
+  }
+  return map;
 }
 
 export function getConfig(key: string): unknown | null {
@@ -205,11 +229,19 @@ export function deleteProvider(id: string): void {
 
 // ============ WRITE: Sources ============
 
+function deriveDisplayCategory(id: string, module: string): string {
+  if (id.startsWith("wx-")) return "wechat";
+  if (id.startsWith("x-")) return "twitter";
+  if (module === "国际时政") return "world";
+  return "rss";
+}
+
 export function createSource(s: Source): void {
   const moduleIds = s.moduleIds?.length ? s.moduleIds : [s.module || "news"];
+  const category = s.displayCategory || deriveDisplayCategory(s.id, moduleIds[0]);
   getDb().prepare(
-    "INSERT INTO sources (id, name, type, url, lang, enabled, module, module_ids) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-  ).run(s.id, s.name, s.type, s.url, s.lang, s.enabled ? 1 : 0, moduleIds[0], JSON.stringify(moduleIds));
+    "INSERT INTO sources (id, name, type, url, lang, enabled, module, module_ids, display_category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  ).run(s.id, s.name, s.type, s.url, s.lang, s.enabled ? 1 : 0, moduleIds[0], JSON.stringify(moduleIds), category);
 }
 
 export function updateSource(id: string, s: Partial<Source>): void {
@@ -219,9 +251,10 @@ export function updateSource(id: string, s: Partial<Source>): void {
 
   const moduleIds = s.moduleIds ? JSON.stringify(s.moduleIds) : null;
   const module = s.moduleIds?.length ? s.moduleIds[0] : null;
+  const category = s.displayCategory ?? null;
   db.prepare(
-    "UPDATE sources SET name=COALESCE(?,name), type=COALESCE(?,type), url=COALESCE(?,url), lang=COALESCE(?,lang), enabled=COALESCE(?,enabled), module=COALESCE(?,module), module_ids=COALESCE(?,module_ids) WHERE id=?"
-  ).run(s.name ?? null, s.type ?? null, s.url ?? null, s.lang ?? null, s.enabled !== undefined ? (s.enabled ? 1 : 0) : null, module, moduleIds, id);
+    "UPDATE sources SET name=COALESCE(?,name), type=COALESCE(?,type), url=COALESCE(?,url), lang=COALESCE(?,lang), enabled=COALESCE(?,enabled), module=COALESCE(?,module), module_ids=COALESCE(?,module_ids), display_category=COALESCE(?,display_category) WHERE id=?"
+  ).run(s.name ?? null, s.type ?? null, s.url ?? null, s.lang ?? null, s.enabled !== undefined ? (s.enabled ? 1 : 0) : null, module, moduleIds, category, id);
 }
 
 export function deleteSource(id: string): void {
@@ -245,6 +278,36 @@ export function updateModule(id: string, m: Partial<Module>): void {
 
 export function deleteModule(id: string): void {
   getDb().prepare("DELETE FROM modules WHERE id = ?").run(id);
+}
+
+// ============ Favorites ============
+
+export interface FavoriteItem {
+  id: string;
+  type: string;
+  title: string;
+  url: string;
+  createdAt: string;
+}
+
+export function getFavorites(): FavoriteItem[] {
+  const db = getDb();
+  db.exec(`CREATE TABLE IF NOT EXISTS favorites (id TEXT PRIMARY KEY, type TEXT NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL DEFAULT '', created_at TEXT DEFAULT (datetime('now')))`);
+  return db.prepare("SELECT id, type, title, url, created_at FROM favorites ORDER BY created_at DESC").all().map((row) => {
+    const r = row as Record<string, unknown>;
+    return { id: r.id as string, type: r.type as string, title: r.title as string, url: r.url as string, createdAt: r.created_at as string };
+  });
+}
+
+export function addFavorite(id: string, type: string, title: string, url: string): void {
+  const db = getDb();
+  db.exec(`CREATE TABLE IF NOT EXISTS favorites (id TEXT PRIMARY KEY, type TEXT NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL DEFAULT '', created_at TEXT DEFAULT (datetime('now')))`);
+  db.prepare("INSERT OR REPLACE INTO favorites (id, type, title, url, created_at) VALUES (?, ?, ?, ?, datetime('now'))").run(id, type, title, url);
+}
+
+export function removeFavorite(id: string): void {
+  const db = getDb();
+  db.prepare("DELETE FROM favorites WHERE id = ?").run(id);
 }
 
 // ============ WRITE: Config ============

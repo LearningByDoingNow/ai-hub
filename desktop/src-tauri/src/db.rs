@@ -102,7 +102,7 @@ fn init_standalone_db(conn: &Connection) -> Result<(), String> {
         CREATE TABLE IF NOT EXISTS providers (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, category TEXT NOT NULL, country TEXT NOT NULL, links TEXT NOT NULL DEFAULT '[]', tags TEXT NOT NULL DEFAULT '[]', created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
         CREATE TABLE IF NOT EXISTS news (id TEXT PRIMARY KEY, title TEXT NOT NULL, title_en TEXT NOT NULL DEFAULT '', source TEXT NOT NULL, date TEXT NOT NULL, summary TEXT NOT NULL, summary_en TEXT NOT NULL DEFAULT '', url TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')));
         CREATE TABLE IF NOT EXISTS papers (id TEXT PRIMARY KEY, title TEXT NOT NULL, authors TEXT NOT NULL DEFAULT '[]', venue TEXT NOT NULL DEFAULT '', date TEXT NOT NULL, abstract TEXT NOT NULL, abstract_en TEXT NOT NULL DEFAULT '', links TEXT NOT NULL DEFAULT '[]', created_at TEXT DEFAULT (datetime('now')));
-        CREATE TABLE IF NOT EXISTS sources (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'rss', url TEXT NOT NULL, lang TEXT NOT NULL DEFAULT 'en', enabled INTEGER NOT NULL DEFAULT 1, module TEXT NOT NULL DEFAULT 'news', module_ids TEXT NOT NULL DEFAULT '[]', created_at TEXT DEFAULT (datetime('now')));
+        CREATE TABLE IF NOT EXISTS sources (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'rss', url TEXT NOT NULL, lang TEXT NOT NULL DEFAULT 'en', enabled INTEGER NOT NULL DEFAULT 1, module TEXT NOT NULL DEFAULT 'news', module_ids TEXT NOT NULL DEFAULT '[]', display_category TEXT NOT NULL DEFAULT 'rss', created_at TEXT DEFAULT (datetime('now')));
         CREATE TABLE IF NOT EXISTS modules (id TEXT PRIMARY KEY, name TEXT NOT NULL, name_en TEXT NOT NULL DEFAULT '', icon TEXT NOT NULL DEFAULT 'rss', sort_order INTEGER NOT NULL DEFAULT 0, created_at TEXT DEFAULT (datetime('now')));
         CREATE TABLE IF NOT EXISTS pipeline_config (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT DEFAULT (datetime('now')));
         CREATE TABLE IF NOT EXISTS pipeline_runs (id TEXT PRIMARY KEY DEFAULT (hex(randomblob(16))), task_type TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'running', items_processed INTEGER DEFAULT 0, error_message TEXT, started_at TEXT DEFAULT (datetime('now')), completed_at TEXT);
@@ -132,7 +132,27 @@ fn init_standalone_db(conn: &Connection) -> Result<(), String> {
 
 fn open_db() -> Result<Connection, String> {
     let path = db_path();
-    Connection::open(&path).map_err(|e| format!("Failed to open DB at {:?}: {}", path, e))
+    let conn = Connection::open(&path).map_err(|e| format!("Failed to open DB at {:?}: {}", path, e))?;
+    migrate_display_category(&conn);
+    Ok(conn)
+}
+
+fn migrate_display_category(conn: &Connection) {
+    let has_col: bool = conn
+        .prepare("PRAGMA table_info(sources)")
+        .and_then(|mut stmt| {
+            let rows = stmt.query_map([], |row| row.get::<_, String>(1))?;
+            let names: Vec<String> = rows.filter_map(|r| r.ok()).collect();
+            Ok(names.iter().any(|n| n == "display_category"))
+        })
+        .unwrap_or(false);
+    if has_col { return; }
+    let _ = conn.execute_batch("
+        ALTER TABLE sources ADD COLUMN display_category TEXT NOT NULL DEFAULT 'rss';
+        UPDATE sources SET display_category = 'wechat' WHERE id LIKE 'wx-%';
+        UPDATE sources SET display_category = 'twitter' WHERE id LIKE 'x-%';
+        UPDATE sources SET display_category = 'world' WHERE module = '国际时政' AND display_category = 'rss';
+    ");
 }
 
 pub fn fetch_news(limit: i64, _module_ids: &[String]) -> Result<Vec<NewsItem>, String> {
@@ -361,5 +381,51 @@ pub fn fetch_papers_since(since: &str) -> Result<Vec<Paper>, String> {
         })
         .map_err(|e| e.to_string())?;
 
+    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct SourceCategory {
+    pub name: String,
+    pub display_category: String,
+}
+
+pub fn fetch_source_categories() -> Result<Vec<SourceCategory>, String> {
+    let conn = open_db()?;
+    let mut stmt = conn
+        .prepare("SELECT name, display_category FROM sources WHERE enabled = 1")
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map([], |row| {
+            Ok(SourceCategory {
+                name: row.get(0)?,
+                display_category: row.get(1)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
+}
+
+pub fn add_favorite(id: &str, item_type: &str, title: &str, url: &str) -> Result<(), String> {
+    let conn = open_db()?;
+    conn.execute(
+        "INSERT OR REPLACE INTO favorites (id, type, title, url, created_at) VALUES (?1, ?2, ?3, ?4, datetime('now'))",
+        [id, item_type, title, url],
+    ).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn remove_favorite(id: &str) -> Result<(), String> {
+    let conn = open_db()?;
+    conn.execute("DELETE FROM favorites WHERE id = ?1", [id]).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn fetch_favorite_ids() -> Result<Vec<String>, String> {
+    let conn = open_db()?;
+    let mut stmt = conn.prepare("SELECT id FROM favorites").map_err(|e| e.to_string())?;
+    let rows = stmt.query_map([], |row| row.get(0)).map_err(|e| e.to_string())?;
     rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
 }
