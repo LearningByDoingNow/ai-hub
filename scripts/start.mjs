@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * AI Hub — One-command startup
- * Starts all services: WeWe RSS (Docker), fetch watcher, and WebUI
+ * Starts all services: WeWe RSS (Docker), fetch watcher, WebUI, and Desktop widget (Tauri)
  * Usage: node scripts/start.mjs
  */
 
@@ -104,6 +104,36 @@ function startFetchWatch(hasWeWe) {
   return proc;
 }
 
+function startDesktop() {
+  log("Desktop", COLORS.blue, "Installing desktop dependencies...");
+  try {
+    execSync("npm run desktop:install", { cwd: ROOT, stdio: "pipe" });
+  } catch (e) {
+    log("Desktop", COLORS.yellow, "Failed to install dependencies — skipping desktop widget");
+    return null;
+  }
+
+  log("Desktop", COLORS.blue, "Starting Tauri desktop widget...");
+  const proc = spawn("npm", ["run", "desktop:dev"], {
+    cwd: ROOT,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, FORCE_COLOR: "1" },
+  });
+  proc.stdout.on("data", (d) => {
+    const line = d.toString().trim();
+    if (line) {
+      log("Desktop", COLORS.blue, line);
+    }
+  });
+  proc.stderr.on("data", (d) => {
+    const line = d.toString().trim();
+    if (line && !line.includes("warning") && !line.includes("Compiling")) {
+      log("Desktop", COLORS.red, line);
+    }
+  });
+  return proc;
+}
+
 function startWebUI() {
   log("WebUI", COLORS.green, "Starting at http://localhost:3000");
   const proc = spawn("npx", ["next", "dev"], {
@@ -158,6 +188,9 @@ async function main() {
   // Step 4: Start WebUI
   const webProc = startWebUI();
 
+  // Step 5: Start Desktop widget
+  const desktopProc = startDesktop();
+
   // Wait a moment then print summary
   setTimeout(() => {
     console.log("");
@@ -167,6 +200,9 @@ async function main() {
     if (hasWeWe) {
       console.log(`${COLORS.gray}    WeWe RSS:  ${COLORS.reset}http://localhost:4000`);
       console.log(`${COLORS.gray}    Watcher:   ${COLORS.reset}Auto-fetch on WeChat updates`);
+    }
+    if (desktopProc) {
+      console.log(`${COLORS.gray}    Desktop:   ${COLORS.reset}Tauri widget launching...`);
     }
     console.log(`${COLORS.gray}    Press Ctrl+C to stop${COLORS.reset}`);
     console.log(`${COLORS.green}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLORS.reset}`);
@@ -178,12 +214,14 @@ async function main() {
     console.log(`\n${COLORS.yellow}Shutting down...${COLORS.reset}`);
     if (watchProc) watchProc.kill();
     if (webProc) webProc.kill();
+    if (desktopProc) desktopProc.kill();
     process.exit(0);
   });
 
   process.on("SIGTERM", () => {
     if (watchProc) watchProc.kill();
     if (webProc) webProc.kill();
+    if (desktopProc) desktopProc.kill();
     process.exit(0);
   });
 }
