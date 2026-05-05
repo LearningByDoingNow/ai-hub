@@ -138,7 +138,7 @@ fn open_db() -> Result<Connection, String> {
 pub fn fetch_news(limit: i64, _module_ids: &[String]) -> Result<Vec<NewsItem>, String> {
     let conn = open_db()?;
     let mut stmt = conn
-        .prepare("SELECT id, title, title_en, source, date, summary, summary_en, url FROM news ORDER BY created_at DESC LIMIT ?1")
+        .prepare("SELECT id, title, title_en, source, date, summary, summary_en, url FROM news ORDER BY date DESC LIMIT ?1")
         .map_err(|e| e.to_string())?;
 
     let rows = stmt
@@ -162,7 +162,7 @@ pub fn fetch_news(limit: i64, _module_ids: &[String]) -> Result<Vec<NewsItem>, S
 pub fn fetch_papers(limit: i64) -> Result<Vec<Paper>, String> {
     let conn = open_db()?;
     let mut stmt = conn
-        .prepare("SELECT id, title, authors, venue, date, abstract, abstract_en, links FROM papers ORDER BY created_at DESC LIMIT ?1")
+        .prepare("SELECT id, title, authors, venue, date, abstract, abstract_en, links FROM papers ORDER BY date DESC LIMIT ?1")
         .map_err(|e| e.to_string())?;
 
     let rows = stmt
@@ -317,7 +317,7 @@ pub fn fetch_llm_config() -> Result<Option<LlmConfig>, String> {
 pub fn fetch_news_since(since: &str) -> Result<Vec<NewsItem>, String> {
     let conn = open_db()?;
     let mut stmt = conn
-        .prepare("SELECT id, title, title_en, source, date, summary, summary_en, url FROM news WHERE created_at > ?1 ORDER BY created_at DESC")
+        .prepare("SELECT id, title, title_en, source, date, summary, summary_en, url FROM news WHERE created_at > ?1 ORDER BY date DESC")
         .map_err(|e| e.to_string())?;
 
     let rows = stmt
@@ -341,7 +341,7 @@ pub fn fetch_news_since(since: &str) -> Result<Vec<NewsItem>, String> {
 pub fn fetch_papers_since(since: &str) -> Result<Vec<Paper>, String> {
     let conn = open_db()?;
     let mut stmt = conn
-        .prepare("SELECT id, title, authors, venue, date, abstract, abstract_en, links FROM papers WHERE created_at > ?1 ORDER BY created_at DESC")
+        .prepare("SELECT id, title, authors, venue, date, abstract, abstract_en, links FROM papers WHERE created_at > ?1 ORDER BY date DESC")
         .map_err(|e| e.to_string())?;
 
     let rows = stmt
