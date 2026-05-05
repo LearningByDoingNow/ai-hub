@@ -169,6 +169,8 @@ npm run fetch:all        # 从所有 77+ 数据源抓取最新内容（约 8 秒
 
 此命令将最新内容写入本地 SQLite 数据库，随时可重新运行获取最新数据。
 
+> **关于微信源：** 预配置的微信源（`wx-*`）需要 Docker 运行 WeWe RSS（见下方[微信公众号数据源](#微信公众号数据源wewe-rss--docker)章节）。如果未配置 Docker/WeWe RSS，这些源会静默跳过 — **其余 60+ 数据源（RSS、arXiv 等）无需 Docker 即可正常工作。** 你可以随时后续再配置微信源。
+
 ### 3. 启动 WebUI
 
 ```bash
@@ -257,12 +259,27 @@ npm run fetch:all && npm run dev
 
 ## 微信公众号数据源（WeWe RSS + Docker）
 
-AI Hub 通过 [WeWe RSS](https://github.com/cooderl/wewe-rss) 抓取微信公众号文章。WeWe RSS 将微信订阅转换为标准 RSS/Atom 格式，通过 Docker 在本地运行。
+> **此部分完全可选。** 如果你不需要微信公众号内容，可以跳过本节。其他 60+ 数据源（RSS、arXiv 等）仅需 `npm install` 即可使用，无需 Docker。
 
-### 部署 WeWe RSS
+AI Hub 通过 [WeWe RSS](https://github.com/cooderl/wewe-rss) 抓取微信公众号文章。WeWe RSS 是一个**独立的**开源项目，将微信订阅转换为标准 Atom 订阅源，以 Docker 容器形式在本地运行。
+
+### 为什么需要 Docker？
+
+微信没有官方 RSS 订阅接口。WeWe RSS 充当桥梁：
+- 它运行一个 Docker 容器
+- 定期扫描你配置的微信公众号
+- 将文章以标准 Atom 格式暴露在 `http://localhost:4000`
+- AI Hub 像抓取普通 RSS 一样抓取这些 Atom 源
+
+### 前置条件
+
+- 安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/) 并确保运行中
+- 一个微信账号（用于在 WeWe RSS 中授权登录）
+
+### 部署步骤
 
 ```bash
-# 1. 拉取并启动 WeWe RSS
+# 第 1 步：拉取并启动 WeWe RSS 容器
 docker run -d \
   --name wewe-rss \
   -p 4000:4000 \
@@ -271,35 +288,65 @@ docker run -d \
   -v $(pwd)/wewe-data:/app/data \
   cooderl/wewe-rss:latest
 
-# 2. 打开 http://localhost:4000 配置 WeWe RSS
-# 3. 添加你想关注的微信公众号
+# 第 2 步：确认容器在运行
+docker ps | grep wewe-rss
+
+# 第 3 步：打开管理面板
+open http://localhost:4000
 ```
+
+在 WeWe RSS 管理面板中：
+1. 输入你设置的授权码登录
+2. 用微信扫码授权
+3. 搜索并添加你想关注的微信公众号
 
 ### 工作原理
 
 ```
 微信公众号
-    ↓ （WeWe RSS 通过配置的账号扫描）
+    ↓ （WeWe RSS 通过授权的微信账号扫描）
 WeWe RSS (Docker, localhost:4000)
-    ↓ （Atom 订阅: /feeds/MP_WXS_xxxxx.atom）
+    ↓ （Atom 订阅源: /feeds/MP_WXS_xxxxx.atom）
 AI Hub engine.mjs（像普通 RSS 一样抓取）
     ↓
 SQLite 数据库 → WebUI + 桌面组件
 ```
 
-### 添加微信数据源
+### 添加微信数据源到 AI Hub
 
-1. 打开 WeWe RSS 管理面板 `http://localhost:4000`
-2. 添加你想关注的微信公众号
-3. 复制订阅地址（如 `http://localhost:4000/feeds/MP_WXS_3073282833.atom`）
-4. 在 AI Hub 设置 → 数据源 → 添加数据源：
-   - 名称：`机器之心`（或任意名称）
-   - URL：步骤 3 中的订阅地址
-   - 模块：选择目标模块（如"AI 资讯"）
+AI Hub 已预配置 10+ 个微信源（指向 `localhost:4000`）。WeWe RSS 运行并添加公众号后，`npm run fetch:all` 即可自动抓取。
 
-已预置的微信数据源：机器之心、新智元、量子位、36氪、人民日报、央视军事、九万里 等。
+如需手动添加更多源：
+1. 在 WeWe RSS 面板找到订阅地址（如 `http://localhost:4000/feeds/MP_WXS_3073282833.atom`）
+2. 在 AI Hub → 设置 → 数据源 → **+ 添加数据源**：
+   - 名称：`机器之心`（显示名称）
+   - URL：WeWe RSS 中的订阅地址
+   - 模块：选择目标模块（如"AI 资讯"或"国际时政"）
 
-> **注意：** WeWe RSS 必须保持运行（`docker start wewe-rss`）才能抓取微信源。其他数据源（RSS、arXiv）无需 Docker。
+### 已预置的微信数据源
+
+| 数据源 | 分类 |
+|--------|------|
+| 机器之心、新智元、智猩猩AI、36氪(微信)、电手、数字生命卡兹克 | AI 资讯 |
+| 人民日报、央视军事、九万里、外军防务研究前沿 | 国际时政 |
+
+### 日常使用
+
+```bash
+# 启动 WeWe RSS（系统重启后执行一次）
+docker start wewe-rss
+
+# 查看状态
+docker ps | grep wewe-rss
+
+# 停止（不需要时）
+docker stop wewe-rss
+
+# 查看日志（排查问题）
+docker logs wewe-rss --tail 50
+```
+
+> **如果 WeWe RSS 未运行：** 微信源抓取会静默失败 — 你会看到结果少了一些，但不会报错。所有其他数据源正常工作。
 
 ---
 

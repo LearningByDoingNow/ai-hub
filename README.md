@@ -169,6 +169,8 @@ npm run fetch:all        # Fetches news + papers from all 77+ sources (~8 second
 
 This pulls the latest content into the local SQLite database. You can re-run anytime to get fresh data.
 
+> **About WeChat sources:** The pre-configured WeChat sources (`wx-*`) require WeWe RSS running via Docker (see [WeChat Sources section](#wechat-sources-wewe-rss--docker) below). If you haven't set up Docker/WeWe RSS, these sources will silently fail — **all other 60+ sources (RSS, arXiv, etc.) work normally without Docker.** You can set up WeChat sources later at any time.
+
 ### 3. Start WebUI
 
 ```bash
@@ -257,12 +259,27 @@ npm run fetch:all && npm run dev
 
 ## WeChat Sources (WeWe RSS + Docker)
 
-AI Hub uses [WeWe RSS](https://github.com/cooderl/wewe-rss) to fetch WeChat public account articles. WeWe RSS converts WeChat subscriptions into standard RSS/Atom feeds, running locally via Docker.
+> **This section is entirely OPTIONAL.** If you don't need WeChat public account content, skip this section completely. All other 60+ sources (RSS feeds, arXiv papers, etc.) work out of the box with just `npm install` — no Docker needed.
 
-### Setup
+AI Hub uses [WeWe RSS](https://github.com/cooderl/wewe-rss) to fetch WeChat public account (微信公众号) articles. WeWe RSS is an **independent** open-source project that converts WeChat subscriptions into standard RSS/Atom feeds. It runs as a separate Docker container on your machine.
+
+### Why is Docker needed?
+
+WeChat does not provide official RSS feeds. WeWe RSS acts as a bridge:
+- It runs a Docker container with a headless browser
+- It periodically scans WeChat accounts you configure
+- It exposes the articles as standard Atom feeds at `http://localhost:4000`
+- AI Hub then fetches these Atom feeds just like any other RSS source
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+- A WeChat account for login authentication in WeWe RSS
+
+### Setup Steps
 
 ```bash
-# 1. Pull and run WeWe RSS
+# Step 1: Pull and start WeWe RSS container
 docker run -d \
   --name wewe-rss \
   -p 4000:4000 \
@@ -271,15 +288,23 @@ docker run -d \
   -v $(pwd)/wewe-data:/app/data \
   cooderl/wewe-rss:latest
 
-# 2. Open http://localhost:4000 to configure WeWe RSS
-# 3. Add WeChat accounts you want to follow
+# Step 2: Verify it's running
+docker ps | grep wewe-rss
+
+# Step 3: Open the dashboard
+open http://localhost:4000
 ```
+
+In the WeWe RSS dashboard:
+1. Log in with the auth code you set above
+2. Scan the QR code with your WeChat to authorize
+3. Add WeChat public accounts you want to follow (search by name)
 
 ### How It Works
 
 ```
 WeChat Public Accounts
-        ↓ (WeWe RSS scans via configured account)
+        ↓ (WeWe RSS scans via authorized WeChat)
 WeWe RSS (Docker, localhost:4000)
         ↓ (Atom feed: /feeds/MP_WXS_xxxxx.atom)
 AI Hub engine.mjs (fetches like regular RSS)
@@ -287,19 +312,41 @@ AI Hub engine.mjs (fetches like regular RSS)
 SQLite database → WebUI + Desktop Widget
 ```
 
-### Adding WeChat Sources
+### Adding WeChat Sources to AI Hub
 
-1. Open WeWe RSS dashboard at `http://localhost:4000`
-2. Add the WeChat public accounts you want to follow
-3. Copy the feed URL (e.g., `http://localhost:4000/feeds/MP_WXS_3073282833.atom`)
-4. In AI Hub Settings → Data Sources → Add Source:
-   - Name: `机器之心` (or any name)
-   - URL: the feed URL from step 3
-   - Module: select the target module (e.g., "AI News")
+AI Hub comes with 10+ WeChat sources pre-configured (pointing to `localhost:4000`). Once WeWe RSS is running and accounts are added, they'll be fetched automatically.
 
-Pre-configured WeChat sources include: 机器之心, 新智元, 量子位, 36氪, 人民日报, 央视军事, 九万里, and more.
+To add more sources manually:
+1. In WeWe RSS dashboard → find the feed URL (e.g., `http://localhost:4000/feeds/MP_WXS_3073282833.atom`)
+2. In AI Hub → Settings → Data Sources → **+ Add Source**:
+   - Name: `机器之心` (display name)
+   - URL: the feed URL from WeWe RSS
+   - Module: select target module (e.g., "AI News" or "World News")
 
-> **Note:** WeWe RSS must be running (`docker start wewe-rss`) for WeChat source fetching to work. Other sources (RSS, arXiv) work without Docker.
+### Pre-configured WeChat Sources
+
+| Source | Category |
+|--------|----------|
+| 机器之心, 新智元, 智猩猩AI, 36氪(微信), 电手, 数字生命卡兹克 | AI News |
+| 人民日报, 央视军事, 九万里, 外军防务研究前沿 | World News |
+
+### Daily Usage
+
+```bash
+# Start WeWe RSS (run once after system reboot)
+docker start wewe-rss
+
+# Check status
+docker ps | grep wewe-rss
+
+# Stop (when not needed)
+docker stop wewe-rss
+
+# View logs (if something goes wrong)
+docker logs wewe-rss --tail 50
+```
+
+> **If WeWe RSS is not running:** WeChat sources will fail silently during fetch — you'll see fewer results but no errors. All other sources continue working normally.
 
 ---
 
