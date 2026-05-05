@@ -228,7 +228,7 @@ LLM_TEMPERATURE=0.5
 
 ### 快速启动（全套）
 
-打开 **3 个终端** 体验完整功能：
+打开 **4 个终端** 体验完整功能：
 
 ```bash
 # 终端 1：启动 WeWe RSS（如果使用微信源）
@@ -239,6 +239,9 @@ npm run dev
 
 # 终端 3：启动桌面组件
 npm run desktop:dev
+
+# 终端 4：自动监听微信更新（检测到新内容立刻抓取）
+npm run fetch:watch
 ```
 
 最简单的单终端启动：
@@ -248,12 +251,16 @@ npm run fetch:all && npm run dev
 
 ### 定时抓取方式
 
-| 方式 | 操作 |
-|------|------|
-| **WebUI** | 设置 → 数据抓取 → 设置间隔（如 60 分钟） |
-| **桌面组件** | 设置 → 设置间隔 |
-| **终端** | `npm run fetch:schedule`（每 4 小时，前台运行） |
-| **系统 cron** | `crontab -e` → `0 */4 * * * cd /path/to/ai-hub && npm run fetch:all` |
+| 方式 | 操作 | 适用场景 |
+|------|------|----------|
+| `npm run fetch:watch` | 每 2 分钟检测 WeWe RSS，有更新立即抓取 | **推荐** — 微信源实时更新 |
+| `npm run fetch:watch -- 60` | 同上，但每 60 秒检测一次 | 更快检测，稍多 CPU |
+| **WebUI** | 设置 → 数据抓取 → 设置间隔 | 定期抓取所有源 |
+| **桌面组件** | 设置 → 设置间隔 | 同 WebUI |
+| `npm run fetch:schedule` | 每 4 小时循环 | 后台 cron 模式 |
+| **系统 cron** | `crontab -e` → `0 */4 * * * cd /path/to/ai-hub && npm run fetch:all` | 服务器部署 |
+
+> **推荐组合：** `npm run fetch:watch` 负责微信源实时更新 + WebUI 设置 30-60 分钟定时抓取所有 RSS 源。
 
 ### 重装 / 重置
 
@@ -294,12 +301,13 @@ AI Hub 通过 [WeWe RSS](https://github.com/cooderl/wewe-rss) 抓取微信公众
 ### 部署步骤
 
 ```bash
-# 第 1 步：拉取并启动 WeWe RSS 容器
+# 第 1 步：拉取并启动 WeWe RSS 容器（每 10 分钟扫描一次）
 docker run -d \
   --name wewe-rss \
   -p 4000:4000 \
   -e DATABASE_TYPE=sqlite \
   -e AUTH_CODE=你的授权码 \
+  -e CRON_EXPRESSION="*/10 * * * *" \
   -v $(pwd)/wewe-data:/app/data \
   cooderl/wewe-rss:latest
 
@@ -309,6 +317,8 @@ docker ps | grep wewe-rss
 # 第 3 步：打开管理面板
 open http://localhost:4000
 ```
+
+> `CRON_EXPRESSION="*/10 * * * *"` 表示每 10 分钟扫描一次微信公众号。默认是每 2 小时，时效性太差。
 
 在 WeWe RSS 管理面板中：
 1. 输入你设置的授权码登录
@@ -351,14 +361,29 @@ AI Hub 已预配置 10+ 个微信源（指向 `localhost:4000`）。WeWe RSS 运
 # 启动 WeWe RSS（系统重启后执行一次）
 docker start wewe-rss
 
-# 查看状态
+# 启动监听（检测到微信更新自动抓取）
+npm run fetch:watch
+
+# 查看 WeWe RSS 状态
 docker ps | grep wewe-rss
 
-# 停止（不需要时）
+# 停止 WeWe RSS（不需要时）
 docker stop wewe-rss
 
 # 查看日志（排查问题）
 docker logs wewe-rss --tail 50
+```
+
+### 推荐工作流（最大时效性）
+
+```
+WeWe RSS (Docker)           AI Hub Watcher              结果
+每 10 分钟扫描微信  →  每 2 分钟检测 feed 更新  →  新内容 ≤12 分钟内出现
+```
+
+```bash
+# 一次性配置完成后，每天只需运行：
+docker start wewe-rss && npm run fetch:watch
 ```
 
 > **如果 WeWe RSS 未运行：** 微信源抓取会静默失败 — 你会看到结果少了一些，但不会报错。所有其他数据源正常工作。

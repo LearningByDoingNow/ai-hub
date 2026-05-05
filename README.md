@@ -228,7 +228,7 @@ You can also configure LLM directly in the WebUI: **Settings → LLM Configurati
 
 ### Quick Launch (Full Stack)
 
-Open **3 terminals** for the complete experience:
+Open **4 terminals** for the complete experience:
 
 ```bash
 # Terminal 1: Start WeWe RSS (if using WeChat sources)
@@ -239,6 +239,9 @@ npm run dev
 
 # Terminal 3: Start Desktop Widget
 npm run desktop:dev
+
+# Terminal 4: Auto-fetch watcher (detects WeWe updates → fetches immediately)
+npm run fetch:watch
 ```
 
 Or a minimal single-terminal start:
@@ -248,12 +251,16 @@ npm run fetch:all && npm run dev
 
 ### Auto-fetch Options
 
-| Method | How |
-|--------|-----|
-| **WebUI** | Settings → Data Fetching → Set interval (e.g., 60 mins) |
-| **Desktop Widget** | Settings → Set interval |
-| **Terminal** | `npm run fetch:schedule` (every 4 hours, foreground) |
-| **System cron** | `crontab -e` → `0 */4 * * * cd /path/to/ai-hub && npm run fetch:all` |
+| Method | How | Best For |
+|--------|-----|----------|
+| `npm run fetch:watch` | Monitors WeWe RSS every 2min, auto-fetches on update | **Recommended** — real-time WeChat updates |
+| `npm run fetch:watch -- 60` | Same but checks every 60 seconds | Faster detection, slightly more CPU |
+| **WebUI** | Settings → Data Fetching → Set interval | Periodic fetch of all sources |
+| **Desktop Widget** | Settings → Set interval | Same as WebUI |
+| `npm run fetch:schedule` | Loop every 4 hours | Background cron-style |
+| **System cron** | `crontab -e` → `0 */4 * * * cd /path/to/ai-hub && npm run fetch:all` | Server deployment |
+
+> **Recommended setup:** Use `npm run fetch:watch` for WeChat sources (instant updates) + WebUI auto-fetch every 30-60 min for all other RSS sources.
 
 ### Reinstall / Reset
 
@@ -294,12 +301,13 @@ WeChat does not provide official RSS feeds. WeWe RSS acts as a bridge:
 ### Setup Steps
 
 ```bash
-# Step 1: Pull and start WeWe RSS container
+# Step 1: Pull and start WeWe RSS container (scan every 10 minutes)
 docker run -d \
   --name wewe-rss \
   -p 4000:4000 \
   -e DATABASE_TYPE=sqlite \
   -e AUTH_CODE=your_auth_code \
+  -e CRON_EXPRESSION="*/10 * * * *" \
   -v $(pwd)/wewe-data:/app/data \
   cooderl/wewe-rss:latest
 
@@ -309,6 +317,8 @@ docker ps | grep wewe-rss
 # Step 3: Open the dashboard
 open http://localhost:4000
 ```
+
+> `CRON_EXPRESSION="*/10 * * * *"` means WeWe RSS scans WeChat accounts every 10 minutes. Default is every 2 hours which is too slow for timely updates.
 
 In the WeWe RSS dashboard:
 1. Log in with the auth code you set above
@@ -351,14 +361,29 @@ To add more sources manually:
 # Start WeWe RSS (run once after system reboot)
 docker start wewe-rss
 
-# Check status
+# Start the watcher (auto-fetches when WeWe has new content)
+npm run fetch:watch
+
+# Check WeWe RSS status
 docker ps | grep wewe-rss
 
-# Stop (when not needed)
+# Stop WeWe RSS (when not needed)
 docker stop wewe-rss
 
-# View logs (if something goes wrong)
+# View WeWe RSS logs (if something goes wrong)
 docker logs wewe-rss --tail 50
+```
+
+### Recommended Workflow (Maximum Timeliness)
+
+```
+WeWe RSS (Docker)          AI Hub Watcher              Result
+Every 10 min scan  →  Every 2 min check feed  →  New content in ≤12 min
+```
+
+```bash
+# One-time setup complete, daily just run:
+docker start wewe-rss && npm run fetch:watch
 ```
 
 > **If WeWe RSS is not running:** WeChat sources will fail silently during fetch — you'll see fewer results but no errors. All other sources continue working normally.
