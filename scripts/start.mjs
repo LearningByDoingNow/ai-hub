@@ -200,6 +200,8 @@ async function main() {
     if (hasWeWe) {
       console.log(`${COLORS.gray}    WeWe RSS:  ${COLORS.reset}http://localhost:4000`);
       console.log(`${COLORS.gray}    Watcher:   ${COLORS.reset}Auto-fetch on WeChat updates`);
+    } else {
+      console.log(`${COLORS.gray}    WeWe RSS:  ${COLORS.yellow}(Docker not found — WeChat sources skipped)${COLORS.reset}`);
     }
     if (desktopProc) {
       console.log(`${COLORS.gray}    Desktop:   ${COLORS.reset}Tauri widget launching...`);
