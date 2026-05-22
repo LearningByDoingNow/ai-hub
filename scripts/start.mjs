@@ -65,7 +65,7 @@ async function startWeWeRSS() {
     -e AUTH_CODE=123456 \
     -e CRON_EXPRESSION="*/10 * * * *" \
     -v ${ROOT}/wewe-data:/app/data \
-    cooderl/wewe-rss:latest`);
+    cooderl/wewe-rss-sqlite:latest`);
 
   if (result) {
     log("WeWe", COLORS.green, "Created and started (port 4000, scan every 10min)");
