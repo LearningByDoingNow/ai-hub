@@ -35,10 +35,37 @@ function tryExec(cmd) {
 }
 
 async function startWeWeRSS() {
-  // Check if Docker is available
+  // Check if Docker CLI is available
   if (!tryExec("docker --version")) {
     log("WeWe", COLORS.yellow, "Docker not found — skipping WeChat sources (optional)");
     return false;
+  }
+
+  // Check if Docker daemon is running
+  const daemonOk = tryExec("docker info") !== null;
+  if (!daemonOk) {
+    // Try to start Docker Desktop (macOS)
+    if (process.platform === "darwin") {
+      log("WeWe", COLORS.blue, "Docker daemon not running, starting Docker Desktop...");
+      tryExec("open -a Docker");
+      // Wait for daemon to be ready (up to 60s)
+      let ready = false;
+      for (let i = 0; i < 60; i++) {
+        await new Promise(r => setTimeout(r, 1000));
+        if (tryExec("docker info") !== null) {
+          ready = true;
+          log("WeWe", COLORS.green, "Docker Desktop started");
+          break;
+        }
+      }
+      if (!ready) {
+        log("WeWe", COLORS.yellow, "Docker did not start in time — WeChat sources skipped");
+        return false;
+      }
+    } else {
+      log("WeWe", COLORS.yellow, "Docker daemon not running — WeChat sources skipped");
+      return false;
+    }
   }
 
   // Check if container exists
