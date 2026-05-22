@@ -46,10 +46,52 @@ async function checkFeedUpdated(url) {
   }
 }
 
+async function syncSources() {
+  try {
+    const resp = await fetch(`${WEWE_BASE}/feeds`, { signal: AbortSignal.timeout(5000) });
+    if (!resp.ok) return;
+    const feeds = await resp.json();
+    if (!Array.isArray(feeds)) return;
+
+    const db = new Database(DB_PATH);
+    const existing = db.prepare(
+      "SELECT id, url FROM sources WHERE url LIKE '%localhost:4000%'"
+    ).all();
+    const existingIds = new Set(existing.map(s => s.url.match(/MP_WXS_\d+/)?.[0]).filter(Boolean));
+    const feedMap = new Map(feeds.map(f => [f.id, f]));
+
+    const insert = db.prepare(
+      "INSERT OR IGNORE INTO sources (id, name, type, url, lang, enabled, module, module_ids, display_category) VALUES (?, ?, 'rss', ?, 'zh', 1, 'news', '[\"news\"]', 'wechat')"
+    );
+
+    for (const feed of feeds) {
+      if (!existingIds.has(feed.id)) {
+        const sourceId = `wx-${feed.id.replace(/^MP_WXS_/, '').toLowerCase()}`;
+        const feedUrl = `${WEWE_BASE}/feeds/${feed.id}.atom`;
+        insert.run(sourceId, feed.name, feedUrl);
+        console.log(`[${ts()}] + New source: ${feed.name}`);
+      }
+    }
+
+    for (const s of existing) {
+      const feedId = s.url.match(/MP_WXS_\d+/)?.[0];
+      if (feedId && !feedMap.has(feedId)) {
+        db.prepare("UPDATE sources SET enabled = 0 WHERE id = ?").run(s.id);
+        console.log(`[${ts()}] - Removed source: ${s.id}`);
+      }
+    }
+
+    db.close();
+  } catch {
+    // WeWe RSS not available, skip
+  }
+}
+
 async function checkForUpdates() {
+  await syncSources();
   const sources = getWeWeSources();
   if (sources.length === 0) {
-    console.log(`[${ts()}] No WeWe sources configured, waiting...`);
+    process.stdout.write(`[${ts()}] · No WeChat sources yet\r`);
     return false;
   }
 
