@@ -35,10 +35,37 @@ function tryExec(cmd) {
 }
 
 async function startWeWeRSS() {
-  // Check if Docker is available
+  // Check if Docker CLI is available
   if (!tryExec("docker --version")) {
     log("WeWe", COLORS.yellow, "Docker not found — skipping WeChat sources (optional)");
     return false;
+  }
+
+  // Check if Docker daemon is running
+  const daemonOk = tryExec("docker info") !== null;
+  if (!daemonOk) {
+    // Try to start Docker Desktop (macOS)
+    if (process.platform === "darwin") {
+      log("WeWe", COLORS.blue, "Docker daemon not running, starting Docker Desktop...");
+      tryExec("open -a Docker");
+      // Wait for daemon to be ready (up to 60s)
+      let ready = false;
+      for (let i = 0; i < 60; i++) {
+        await new Promise(r => setTimeout(r, 1000));
+        if (tryExec("docker info") !== null) {
+          ready = true;
+          log("WeWe", COLORS.green, "Docker Desktop started");
+          break;
+        }
+      }
+      if (!ready) {
+        log("WeWe", COLORS.yellow, "Docker did not start in time — WeChat sources skipped");
+        return false;
+      }
+    } else {
+      log("WeWe", COLORS.yellow, "Docker daemon not running — WeChat sources skipped");
+      return false;
+    }
   }
 
   // Check if container exists
@@ -63,9 +90,9 @@ async function startWeWeRSS() {
     -p 4000:4000 \
     -e DATABASE_TYPE=sqlite \
     -e AUTH_CODE=123456 \
-    -e CRON_EXPRESSION="*/10 * * * *" \
+    -e CRON_EXPRESSION="${process.env.WEWE_CRON || "*/10 * * * *"}" \
     -v ${ROOT}/wewe-data:/app/data \
-    cooderl/wewe-rss:latest`);
+    cooderl/wewe-rss-sqlite:latest`);
 
   if (result) {
     log("WeWe", COLORS.green, "Created and started (port 4000, scan every 10min)");
@@ -200,6 +227,8 @@ async function main() {
     if (hasWeWe) {
       console.log(`${COLORS.gray}    WeWe RSS:  ${COLORS.reset}http://localhost:4000`);
       console.log(`${COLORS.gray}    Watcher:   ${COLORS.reset}Auto-fetch on WeChat updates`);
+    } else {
+      console.log(`${COLORS.gray}    WeWe RSS:  ${COLORS.yellow}(Docker not found — WeChat sources skipped)${COLORS.reset}`);
     }
     if (desktopProc) {
       console.log(`${COLORS.gray}    Desktop:   ${COLORS.reset}Tauri widget launching...`);

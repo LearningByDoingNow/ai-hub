@@ -341,7 +341,7 @@ docker run -d \
   -e AUTH_CODE=your_auth_code \
   -e CRON_EXPRESSION="*/10 * * * *" \
   -v $(pwd)/wewe-data:/app/data \
-  cooderl/wewe-rss:latest
+  cooderl/wewe-rss-sqlite:latest
 
 # Step 2: Verify it's running
 docker ps | grep wewe-rss

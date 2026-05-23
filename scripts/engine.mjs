@@ -59,8 +59,53 @@ function isRecent(dateStr) {
   return age < MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 }
 
+async function syncWeChatSources(db) {
+  try {
+    const resp = await fetch("http://localhost:4000/feeds", { signal: AbortSignal.timeout(5000) });
+    if (!resp.ok) return;
+    const feeds = await resp.json();
+    if (!Array.isArray(feeds) || feeds.length === 0) return;
+
+    const existingUrls = db.prepare("SELECT id, url FROM sources WHERE url LIKE '%localhost:4000%'").all();
+    const existingFeedIds = new Set(existingUrls.map(s => s.url.match(/MP_WXS_\d+/)?.[0]).filter(Boolean));
+    const feedMap = new Map(feeds.map(f => [f.id, f]));
+
+    let added = 0, disabled = 0;
+
+    // Add WeWe RSS feeds not yet in AI Hub
+    const insert = db.prepare(
+      "INSERT OR IGNORE INTO sources (id, name, type, url, lang, enabled, module, module_ids, display_category) VALUES (?, ?, 'rss', ?, 'zh', 1, 'news', '[\"news\"]', 'wechat')"
+    );
+    for (const feed of feeds) {
+      if (!existingFeedIds.has(feed.id)) {
+        const sourceId = `wx-${feed.id.replace(/^MP_WXS_/, '').toLowerCase()}`;
+        const feedUrl = `http://localhost:4000/feeds/${feed.id}.atom`;
+        insert.run(sourceId, feed.name, feedUrl);
+        existingFeedIds.add(feed.id);
+        console.log(`  + 新增微信源: ${feed.name} (${feedUrl})`);
+        added++;
+      }
+    }
+
+    // Disable sources whose feeds no longer exist in WeWe RSS
+    for (const s of existingUrls) {
+      const feedId = s.url.match(/MP_WXS_\d+/)?.[0];
+      if (feedId && !feedMap.has(feedId)) {
+        db.prepare("UPDATE sources SET enabled = 0 WHERE id = ?").run(s.id);
+        console.log(`  - 移除微信源: ${s.id} (公众号已取消订阅)`);
+        disabled++;
+      }
+    }
+
+    if (added > 0 || disabled > 0) console.log("");
+  } catch {
+    // WeWe RSS not available, skip silently
+  }
+}
+
 async function runFetch() {
   const db = getDb();
+  await syncWeChatSources(db);
   const sources = getEnabledSources(db);
   const startTime = Date.now();
 
