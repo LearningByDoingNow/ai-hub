@@ -90,7 +90,7 @@ async function startWeWeRSS() {
     -p 4000:4000 \
     -e DATABASE_TYPE=sqlite \
     -e AUTH_CODE=123456 \
-    -e CRON_EXPRESSION="*/10 * * * *" \
+    -e CRON_EXPRESSION="${process.env.WEWE_CRON || "*/10 * * * *"}" \
     -v ${ROOT}/wewe-data:/app/data \
     cooderl/wewe-rss-sqlite:latest`);
 
